@@ -47,14 +47,15 @@ const productSchema = new mongoose.Schema(
       default:  0,
       min:      [0, "Stock cannot be negative"],
     },
+    countInStock: {
+      type:    Number,
+      default: 0,
+      min:     [0, "countInStock cannot be negative"],
+    },
 
     // ── Images ───────────────────────────────────────────────
-    images: [
-      {
-        url:      { type: String, required: true },
-        publicId: { type: String },
-      },
-    ],
+    // Supports both legacy objects ({url, publicId}) and direct URL strings.
+    images: [{ type: mongoose.Schema.Types.Mixed }],
 
     // ── Categorization ───────────────────────────────────────
     category: {
@@ -89,6 +90,16 @@ const productSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+productSchema.pre("validate", function (next) {
+  if (typeof this.stock === "number" && (this.countInStock === undefined || this.countInStock === null)) {
+    this.countInStock = this.stock;
+  }
+  if (typeof this.countInStock === "number" && (this.stock === undefined || this.stock === null)) {
+    this.stock = this.countInStock;
+  }
+  next();
+});
 
 // Full-text search index on name, description, brand
 productSchema.index({ name: "text", description: "text", brand: "text" });

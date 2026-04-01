@@ -3,6 +3,7 @@
 //  Tabs: Overview | My Products | Add Product | Orders | Profile
 // ============================================================
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import api from "../api/axios";
 import { toast } from "react-toastify";
 
@@ -192,7 +193,12 @@ const SellerDashboard = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-800 mb-2">Seller Dashboard</h1>
+      <div className="flex items-center justify-between gap-3 mb-2">
+        <h1 className="text-3xl font-bold text-gray-800">Seller Dashboard</h1>
+        <Link to="/seller/create-product" className="btn-primary text-sm">
+          + Quick Add Product
+        </Link>
+      </div>
       <p className="text-gray-400 text-sm mb-6">Manage your store, products and orders</p>
 
       {/* Tabs */}

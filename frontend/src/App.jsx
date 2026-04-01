@@ -20,6 +20,7 @@ import Orders           from "./pages/Orders";
 import Profile          from "./pages/Profile";
 import SellerDashboard  from "./pages/SellerDashboard";
 import AdminDashboard   from "./pages/AdminDashboard";
+import CreateProduct    from "./pages/CreateProduct";
 
 function App() {
   return (
@@ -48,6 +49,11 @@ function App() {
             <Route path="/seller" element={
               <ProtectedRoute sellerOnly>
                 <SellerDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/seller/create-product" element={
+              <ProtectedRoute sellerOnly>
+                <CreateProduct />
               </ProtectedRoute>
             } />
 

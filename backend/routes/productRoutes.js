@@ -7,14 +7,17 @@ const express = require("express");
 const router  = express.Router();
 
 const {
+  createProduct,
   getProducts,
   getProductById,
   addReview,
 } = require("../controllers/productController");
 
-const { protect } = require("../middleware/authMiddleware");
+const { upload } = require("../config/cloudinary");
+const { protect, sellerOnly } = require("../middleware/authMiddleware");
 
 // Public
+router.post("/", protect, sellerOnly, upload.array("images", 5), createProduct);
 router.get("/",    getProducts);
 router.get("/:id", getProductById);
 

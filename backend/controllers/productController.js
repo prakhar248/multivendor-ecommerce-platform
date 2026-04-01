@@ -8,6 +8,50 @@ const Product = require("../models/Product");
 const Seller  = require("../models/Seller");
 
 // ============================================================
+//  @desc    Create product with image upload
+//  @route   POST /api/products
+//  @access  Seller (approved)
+// ============================================================
+exports.createProduct = async (req, res, next) => {
+  try {
+    const { name, price, description, category, countInStock } = req.body;
+
+    if (!name || !price || !description || !category) {
+      return res.status(400).json({
+        success: false,
+        message: "name, price, description and category are required",
+      });
+    }
+
+    const images = req.files?.length ? req.files.map((file) => file.path) : [];
+
+    // Graceful handling: allow product creation without images.
+    if (images.length === 0) {
+      // no-op: product is still created with an empty images array
+    }
+
+    const product = await Product.create({
+      name: name.trim(),
+      price: Number(price),
+      description: description.trim(),
+      category,
+      countInStock: Number(countInStock || 0),
+      stock: Number(countInStock || 0),
+      images,
+      seller: req.user._id,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Product created successfully",
+      product,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ============================================================
 //  @desc    Get all products (public browsing with filters)
 //  @route   GET /api/products
 //  @access  Public
