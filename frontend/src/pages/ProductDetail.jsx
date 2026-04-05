@@ -24,8 +24,12 @@ const ProductDetail = () => {
   const [comment,   setComment]   = useState("");
   const [canReview, setCanReview] = useState(false);
   const [showZoom,  setShowZoom]  = useState(false);
-  const [lensStyle, setLensStyle] = useState({});
-  const [zoomStyle, setZoomStyle] = useState({});
+
+  // ✅ ALL HOOKS AT TOP LEVEL (BEFORE ANY RETURNS)
+  // Direct DOM refs for zero-lag zoom (no React re-renders)
+  const lensRef = useRef(null);
+  const zoomRef = useRef(null);
+  const rafIdRef = useRef(null);
 
   useEffect(() => {
     const fetch = async () => {
@@ -92,6 +96,16 @@ const ProductDetail = () => {
     }
   };
 
+  // Cleanup on component unmount
+  useEffect(() => {
+    return () => {
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current);
+      }
+    };
+  }, []);
+
+  // ✅ CONDITIONAL RETURNS (AFTER ALL HOOKS)
   if (loading) return (
     <div className="flex justify-center py-20">
       <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-brand" />
@@ -104,9 +118,6 @@ const ProductDetail = () => {
   const imageUrl = typeof product.images?.[activeImg] === "string"
     ? product.images[activeImg]
     : product.images?.[activeImg]?.url;
-
-  // Performance-optimized RAF handler for smooth zoom
-  const rafIdRef = useRef(null);
 
   const handleMouseMove = (e) => {
     // Cancel previous frame if still pending
@@ -133,33 +144,21 @@ const ProductDetail = () => {
       const xPercent = ((lensX + lensSize / 2) / rect.width) * 100;
       const yPercent = ((lensY + lensSize / 2) / rect.height) * 100;
 
-      // Update lens position (using pixels for precision)
-      setLensStyle({
-        left: lensX,
-        top: lensY,
-        width: lensSize,
-        height: lensSize,
-      });
+      // DIRECT DOM UPDATE (NO STATE = NO RE-RENDER = ZERO LAG)
+      if (lensRef.current) {
+        lensRef.current.style.left = lensX + "px";
+        lensRef.current.style.top = lensY + "px";
+      }
 
-      // Update zoom panel (200% magnification - Amazon style)
-      setZoomStyle({
-        backgroundImage: `url(${imageUrl})`,
-        backgroundPosition: `${xPercent}% ${yPercent}%`,
-        backgroundSize: "200%",
-      });
+      if (zoomRef.current) {
+        zoomRef.current.style.backgroundImage = `url(${imageUrl})`;
+        zoomRef.current.style.backgroundPosition = `${xPercent}% ${yPercent}%`;
+        zoomRef.current.style.backgroundSize = "200%";
+      }
 
       rafIdRef.current = null;
     });
   };
-
-  // Cleanup on component unmount
-  useEffect(() => {
-    return () => {
-      if (rafIdRef.current) {
-        cancelAnimationFrame(rafIdRef.current);
-      }
-    };
-  }, []);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-10">
@@ -185,12 +184,11 @@ const ProductDetail = () => {
                 {/* Clean Amazon-Style Lens */}
                 {showZoom && (
                   <div
+                    ref={lensRef}
                     className="absolute bg-gray-200/40 border border-gray-400 pointer-events-none"
                     style={{
-                      left: `${lensStyle.left}px`,
-                      top: `${lensStyle.top}px`,
-                      width: `${lensStyle.width}px`,
-                      height: `${lensStyle.height}px`,
+                      width: "150px",
+                      height: "150px",
                     }}
                   />
                 )}
@@ -221,8 +219,8 @@ const ProductDetail = () => {
             {showZoom && imageUrl && (
               <div className="hidden lg:block w-[500px] h-[500px] border border-gray-300 overflow-hidden bg-white">
                 <div
-                  className="w-full h-full bg-no-repeat transition-all duration-75"
-                  style={zoomStyle}
+                  ref={zoomRef}
+                  className="w-full h-full bg-no-repeat"
                 />
               </div>
             )}
