@@ -106,6 +106,16 @@ const ProductDetail = () => {
     };
   }, []);
 
+  // ✅ SET ZOOM BACKGROUND IMAGE (INITIALIZE ONCE)
+  useEffect(() => {
+    if (zoomRef.current && imageUrl) {
+      console.log("🖼️ Setting zoom background image:", imageUrl);
+      zoomRef.current.style.backgroundImage = `url(${imageUrl})`;
+      zoomRef.current.style.backgroundRepeat = "no-repeat";
+      zoomRef.current.style.backgroundSize = "200%";
+    }
+  }, [imageUrl]);
+
   // ✅ CONDITIONAL RETURNS (AFTER ALL HOOKS)
   if (loading) return (
     <div className="flex justify-center py-20">
@@ -151,10 +161,9 @@ const ProductDetail = () => {
         lensRef.current.style.top = lensY + "px";
       }
 
+      // Only update position, backgroundImage is set in useEffect
       if (zoomRef.current) {
-        zoomRef.current.style.backgroundImage = `url(${imageUrl})`;
         zoomRef.current.style.backgroundPosition = `${xPercent}% ${yPercent}%`;
-        zoomRef.current.style.backgroundSize = "200%";
       }
 
       rafIdRef.current = null;
