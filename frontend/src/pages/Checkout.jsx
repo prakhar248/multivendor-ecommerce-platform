@@ -46,11 +46,16 @@ const Checkout = () => {
     ? [buyNowItem]
     : cart?.items || [];
 
-  // Calculate prices
-  const subtotal   = items.reduce((acc, i) => acc + i.priceAtAdd * i.quantity, 0);
-  const shipping   = subtotal > 500 ? 0 : 50;
-  const tax        = Math.round(subtotal * 0.18);
-  const grandTotal = subtotal + shipping + tax;
+  // ✅ FIX PRICE CALCULATION - Handle both Buy Now and Cart items
+  const itemsPrice = items.reduce((acc, item) => {
+    const price = Number(item.price || item.priceAtAdd || item.product?.price || 0);
+    const qty = Number(item.quantity || item.qty || 1);
+    return acc + (price * qty);
+  }, 0);
+
+  const shipping   = itemsPrice > 500 ? 0 : 50;
+  const tax        = Math.round(itemsPrice * 0.18);
+  const grandTotal = itemsPrice + shipping + tax;
 
   // Fetch saved addresses on mount
   useEffect(() => {
@@ -204,7 +209,7 @@ const Checkout = () => {
   // ── Consolidated Payment Flow ────────────────────────────────────
   // Step 1 → 2: Create order + Razorpay order + Open Payment
   const handlePayNow = async () => {
-    // Safety check: ensure we have items before processing
+    // ✅ SAFETY CHECK: ensure we have valid items
     if (!items || items.length === 0) {
       toast.error("No items to checkout. Please add items to your cart or use Buy Now.");
       return;
@@ -218,21 +223,46 @@ const Checkout = () => {
       console.log("📦 Items count:", items.length);
       console.log("🛍️ Is Buy Now:", !!buyNowItem);
       console.log("📍 Shipping address:", shippingAddress);
+      console.log("📝 Raw items before mapping:", items);
+
+      // ✅ FIX ORDER PAYLOAD STRUCTURE - Ensure all required fields
+      const orderItems = items.map((item) => {
+        const itemPrice = Number(item.price || item.priceAtAdd || item.product?.price || 0);
+        const itemQty = Number(item.quantity || item.qty || 1);
+        const itemImage = 
+          item.image ||
+          (typeof item.product?.images?.[0] === "string" ? item.product.images[0] : item.product?.images?.[0]?.url) ||
+          item.product?.images?.[0] ||
+          "";
+
+        return {
+          product: item._id || item.product?._id || item.product,
+          name: item.name || item.product?.name || "Product",
+          image: itemImage,
+          price: itemPrice,
+          quantity: itemQty,
+        };
+      });
+
+      // ✅ ENSURE ALL NUMERIC FIELDS ARE VALID NUMBERS
+      const validatedItemsPrice = Number(itemsPrice) || 0;
+      const validatedShipping = Number(shipping) || 0;
+      const validatedTax = Number(tax) || 0;
+      const validatedTotal = Number(grandTotal) || 0;
+
+      const orderPayload = {
+        shippingAddress,
+        orderItems,
+        itemsPrice: validatedItemsPrice,
+        shippingPrice: validatedShipping,
+        taxPrice: validatedTax,
+        totalPrice: validatedTotal,
+      };
+
+      console.log("🚀 FINAL ORDER DATA:", orderPayload);
 
       // Step 1: Create order in MongoDB
       console.log("📤 1. Creating order in database...");
-      
-      // Prepare payload: include orderItems only for Buy Now flow
-      const orderPayload = { shippingAddress };
-      if (buyNowItem) {
-        // BUY NOW FLOW: pass items directly
-        orderPayload.orderItems = items;
-        console.log("🚀 Buy Now detected - passing direct items to backend");
-      } else {
-        // CART FLOW: backend will fetch from cart
-        console.log("🛒 Cart flow - backend will fetch items");
-      }
-
       const { data: orderData } = await api.post("/orders", orderPayload);
       const createdOrder = orderData.order;
 
@@ -498,7 +528,7 @@ const Checkout = () => {
             })}
             <div className="border-t border-gray-100 pt-3 space-y-1 text-sm">
               <div className="flex justify-between text-gray-500">
-                <span>Subtotal</span><span>₹{subtotal.toLocaleString()}</span>
+                <span>Subtotal</span><span>₹{itemsPrice.toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-gray-500">
                 <span>Shipping</span><span>{shipping === 0 ? "FREE" : `₹${shipping}`}</span>
