@@ -64,7 +64,7 @@ exports.getProducts = async (req, res, next) => {
       minPrice,
       maxPrice,
       seller,               // Filter by a specific seller's products
-      sort    = "-createdAt",
+      sort    = "newest",
       page    = 1,
       limit   = 12,
     } = req.query;
@@ -79,7 +79,11 @@ exports.getProducts = async (req, res, next) => {
       isActive: true,
     };
 
-    if (search)   filter.$text     = { $search: search };
+    // Search: use regex instead of text search for flexibility
+    if (search) {
+      filter.name = { $regex: search, $options: "i" };
+    }
+
     if (category && category !== "All") filter.category = category;
     if (seller)   filter.seller    = seller;
     if (minPrice || maxPrice) {
@@ -88,12 +92,22 @@ exports.getProducts = async (req, res, next) => {
       if (maxPrice) filter.price.$lte = Number(maxPrice);
     }
 
+    // Determine sort option
+    let sortOption = { createdAt: -1 }; // Default: newest first
+    if (sort === "price_asc") {
+      sortOption = { price: 1 };
+    } else if (sort === "price_desc") {
+      sortOption = { price: -1 };
+    } else if (sort === "newest") {
+      sortOption = { createdAt: -1 };
+    }
+
     const skip  = (Number(page) - 1) * Number(limit);
     const total = await Product.countDocuments(filter);
 
     const products = await Product.find(filter)
       .populate("seller", "name")   // Show seller name on product card
-      .sort(sort)
+      .sort(sortOption)
       .skip(skip)
       .limit(Number(limit));
 
