@@ -33,10 +33,22 @@ const orderSchema = new mongoose.Schema(
       enum:    ["pending", "paid", "failed", "refunded"],
       default: "pending",
     },
+    // Razorpay payment fields
     razorpayOrderId:   String,
     razorpayPaymentId: String,
     razorpaySignature: String,
-    paidAt:            Date,
+    
+    // PayU payment fields
+    paymentMethod: {
+      type: String,
+      enum: ["razorpay", "payu"],
+      default: "razorpay",
+    },
+    payuTxnId:     String,
+    payuHash:      String,
+    payuStatus:    String, // success, failure, pending
+    
+    paidAt:        Date,
     status: {
       type:    String,
       enum:    ["processing", "shipped", "out_for_delivery", "delivered", "cancelled"],

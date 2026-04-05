@@ -27,6 +27,7 @@ const Checkout = () => {
   const [loading, setLoading] = useState(false);
   const [savingAddress, setSavingAddress] = useState(false);
   const [orderId, setOrderId] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState("razorpay"); // 'razorpay' or 'payu'
 
   // Address management
   const [savedAddresses, setSavedAddresses]   = useState([]);
@@ -207,7 +208,7 @@ const Checkout = () => {
   };
 
   // ── Consolidated Payment Flow ────────────────────────────────────
-  // Step 1 → 2: Create order + Razorpay order + Open Payment
+  // Step 1 → 2: Create order + Payment (Razorpay or PayU)
   const handlePayNow = async () => {
     // ✅ SAFETY CHECK: ensure we have valid items
     if (!items || items.length === 0) {
@@ -273,10 +274,27 @@ const Checkout = () => {
       console.log("✅ 1. Order created:", createdOrder._id);
       setOrderId(createdOrder._id);
 
+      // Route based on selected payment method
+      if (paymentMethod === "payu") {
+        await handlePayUPayment(createdOrder._id);
+      } else {
+        await handleRazorpayPayment(createdOrder._id);
+      }
+    } catch (err) {
+      console.error("❌ Payment flow error:", err?.response?.data || err.message);
+      toast.error(err.response?.data?.message || "Failed to process payment");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ── Razorpay Payment Handler ────────────────────────────────────
+  const handleRazorpayPayment = async (createdOrderId) => {
+    try {
       // Step 2: Create Razorpay order
       console.log("📤 2. Creating Razorpay order...");
       const { data: paymentData } = await api.post("/payment/create-order", {
-        orderId: createdOrder._id,
+        orderId: createdOrderId,
       });
 
       console.log("✅ 2. Razorpay order created:", paymentData.razorpayOrderId);
@@ -284,17 +302,19 @@ const Checkout = () => {
       // Step 3: Open Razorpay checkout
       console.log("📤 3. Opening Razorpay checkout...");
 
+      const shippingAddress = getCurrentAddress();
+
       const options = {
         key: paymentData.keyId,
         amount: paymentData.amount,
         currency: paymentData.currency,
         name: "ShopNow",
-        description: `Order #${createdOrder._id}`,
+        description: `Order #${createdOrderId}`,
         order_id: paymentData.razorpayOrderId,
 
         handler: async (response) => {
           try {
-            console.log("✨ Payment response received:", response);
+            console.log("✨ Razorpay payment response received:", response);
             console.log("📤 3. Verifying payment with backend...");
 
             // Step 4: Verify payment signature
@@ -302,7 +322,7 @@ const Checkout = () => {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
-              orderId: createdOrder._id,
+              orderId: createdOrderId,
             });
 
             console.log("✅ 3. Payment verified!");
@@ -341,10 +361,83 @@ const Checkout = () => {
       rzp.open();
       console.log("✅ Razorpay checkout opened");
     } catch (err) {
-      console.error("❌ Payment flow error:", err?.response?.data || err.message);
-      toast.error(err.response?.data?.message || "Failed to process payment");
-    } finally {
-      setLoading(false);
+      console.error("❌ Razorpay payment error:", err?.response?.data || err.message);
+      throw err;
+    }
+  };
+
+  // ── PayU Payment Handler ────────────────────────────────────
+  const handlePayUPayment = async (createdOrderId) => {
+    try {
+      // Step 2: Get PayU payment details from backend
+      console.log("📤 2. Generating PayU payment form...");
+      const { data: paymentResponse } = await api.post("/payment/payu-generate", {
+        orderId: createdOrderId,
+      });
+
+      if (!paymentResponse.success || !paymentResponse.paymentData) {
+        throw new Error("Failed to generate PayU payment form");
+      }
+
+      console.log("✅ 2. PayU payment details received");
+
+      const paymentData = paymentResponse.paymentData;
+      const payuTestUrl = paymentResponse.payuTestUrl;
+
+      // Step 3: Create hidden form and submit to PayU
+      console.log("📤 3. Submitting to PayU gateway...");
+
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = payuTestUrl;
+      form.style.display = "none";
+
+      // Add all required PayU fields to form
+      const fields = {
+        key: paymentData.key,
+        txnid: paymentData.txnid,
+        amount: paymentData.amount.toString(),
+        productinfo: paymentData.productinfo,
+        firstname: paymentData.firstname,
+        lastname: paymentData.lastname,
+        email: paymentData.email,
+        phone: paymentData.phone,
+        address1: paymentData.address1,
+        city: paymentData.city,
+        state: paymentData.state,
+        zipcode: paymentData.zipcode,
+        hash: paymentData.hash,
+        surl: paymentData.surl,
+        furl: paymentData.furl,
+        udf1: paymentData.udf1,
+        udf2: paymentData.udf2,
+      };
+
+      // Create hidden input for each field
+      Object.keys(fields).forEach((key) => {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = key;
+        input.value = fields[key];
+        form.appendChild(input);
+      });
+
+      document.body.appendChild(form);
+      
+      console.log("✅ PayU form created and submitted");
+      console.log("🔐 Transaction ID:", paymentData.txnid);
+      console.log("💰 Amount:", paymentData.amount);
+
+      // Submit form to PayU
+      form.submit();
+
+      // Clean up form after submission
+      setTimeout(() => {
+        document.body.removeChild(form);
+      }, 1000);
+    } catch (err) {
+      console.error("❌ PayU payment error:", err?.response?.data || err.message);
+      throw err;
     }
   };
 
@@ -507,6 +600,54 @@ const Checkout = () => {
       {/* ── STEP 1: Review Order ───────────────────────── */}
       {step === 1 && (
         <div className="space-y-4">
+          {/* Payment Method Selection */}
+          <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+            <h2 className="font-bold text-gray-800 mb-4">Choose Payment Method</h2>
+            <div className="space-y-3">
+              {/* Razorpay Option */}
+              <label className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition ${
+                paymentMethod === "razorpay" 
+                  ? "border-blue-600 bg-blue-50" 
+                  : "border-gray-200 hover:border-gray-300"
+              }`}>
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value="razorpay"
+                  checked={paymentMethod === "razorpay"}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  className="w-4 h-4"
+                />
+                <div className="ml-3 flex-1">
+                  <p className="font-semibold text-gray-900">Razorpay</p>
+                  <p className="text-sm text-gray-600">Fast & secure online payment</p>
+                </div>
+                <span className="text-xl">💳</span>
+              </label>
+
+              {/* PayU Option */}
+              <label className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition ${
+                paymentMethod === "payu" 
+                  ? "border-green-600 bg-green-50" 
+                  : "border-gray-200 hover:border-gray-300"
+              }`}>
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value="payu"
+                  checked={paymentMethod === "payu"}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  className="w-4 h-4"
+                />
+                <div className="ml-3 flex-1">
+                  <p className="font-semibold text-gray-900">PayU</p>
+                  <p className="text-sm text-gray-600">Trusted payment gateway in India</p>
+                </div>
+                <span className="text-xl">🏦</span>
+              </label>
+            </div>
+          </div>
+
           <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
             <h2 className="font-bold text-gray-800 mb-4">Order Review</h2>
             {items.map((item, i) => {
@@ -552,14 +693,14 @@ const Checkout = () => {
 
           <div className="flex gap-3">
             <button onClick={() => setStep(0)} className="flex-1 py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition">
-              ← Back to Address
+              ← Back to Review
             </button>
             <button
               onClick={handlePayNow}
               disabled={loading || items.length === 0}
               className="flex-1 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
-              {loading ? "Processing..." : "💳 Pay Now"}
+              {loading ? "Processing..." : `Proceed with ${paymentMethod === "payu" ? "PayU" : "Razorpay"}`}
             </button>
           </div>
         </div>
@@ -567,11 +708,23 @@ const Checkout = () => {
 
       {/* ── PAYMENT INFO HELP ────────────────────────────── */}
       {step === 1 && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6 text-sm text-blue-900">
-          <p className="font-semibold mb-2">🧪 Test Card Information</p>
-          <p>Card: <code className="bg-blue-100 px-2 py-1 rounded">4111 1111 1111 1111</code></p>
-          <p>Expiry: Any future date</p>
-          <p>CVV: Any 3 digits</p>
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6 text-sm text-blue-900 space-y-3">
+          {paymentMethod === "razorpay" ? (
+            <>
+              <p className="font-semibold mb-2">🧪 Razorpay Test Card Information</p>
+              <p>Card Number: <code className="bg-blue-100 px-2 py-1 rounded">4111 1111 1111 1111</code></p>
+              <p>Expiry: Any future date (e.g., 12/25)</p>
+              <p>CVV: Any 3 digits (e.g., 123)</p>
+            </>
+          ) : (
+            <>
+              <p className="font-semibold mb-2">🧪 PayU Test Card Information</p>
+              <p>Card Number: <code className="bg-green-100 px-2 py-1 rounded">4111 1111 1111 1111</code></p>
+              <p>Expiry: Any future date (e.g., 12/25)</p>
+              <p>CVV: Any 3 digits (e.g., 123)</p>
+              <p className="text-xs text-green-800 mt-2">ℹ️ You'll be redirected to PayU's secure checkout. After payment, you'll return to ShopNow.</p>
+            </>
+          )}
         </div>
       )}
     </div>
