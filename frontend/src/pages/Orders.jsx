@@ -1,5 +1,5 @@
 // ============================================================
-//  src/pages/Orders.jsx  —  User's order history
+//  src/pages/Orders.jsx  —  User's order history with tracking
 // ============================================================
 
 import { useEffect, useState } from "react";
@@ -9,6 +9,7 @@ import api from "../api/axios";
 const STATUS_COLORS = {
   processing: "bg-yellow-100 text-yellow-700",
   shipped:    "bg-blue-100   text-blue-700",
+  out_for_delivery: "bg-purple-100 text-purple-700",
   delivered:  "bg-green-100  text-green-700",
   cancelled:  "bg-red-100    text-red-600",
 };
@@ -17,6 +18,74 @@ const PAYMENT_COLORS = {
   paid:    "bg-green-100 text-green-700",
   pending: "bg-orange-100 text-orange-600",
   failed:  "bg-red-100    text-red-600",
+};
+
+// Order tracking steps
+const TRACKING_STEPS = [
+  { key: "processing", label: "Processing", icon: "📋" },
+  { key: "shipped", label: "Shipped", icon: "📦" },
+  { key: "out_for_delivery", label: "Out for Delivery", icon: "🚚" },
+  { key: "delivered", label: "Delivered", icon: "✅" },
+];
+
+// Component to show order tracking progress
+const OrderTracking = ({ status }) => {
+  const getStepIndex = () => {
+    const index = TRACKING_STEPS.findIndex(step => step.key === status);
+    return index >= 0 ? index : 0;
+  };
+
+  const currentStepIndex = getStepIndex();
+
+  return (
+    <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+      <p className="text-xs text-gray-500 mb-3 font-semibold">Order Tracking</p>
+      
+      {/* Visual progress bar */}
+      <div className="flex items-center justify-between mb-4">
+        {TRACKING_STEPS.map((step, index) => {
+          const isCompleted = index <= currentStepIndex;
+          const isCurrent = index === currentStepIndex;
+          
+          return (
+            <div key={step.key} className="flex flex-col items-center flex-1">
+              {/* Step circle */}
+              <div className={`
+                w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold mb-2
+                transition-colors
+                ${isCompleted ? "bg-green-500 text-white" : "bg-gray-200 text-gray-400"}
+                ${isCurrent ? "ring-2 ring-green-300" : ""}
+              `}>
+                {isCompleted ? "✓" : step.icon}
+              </div>
+              
+              {/* Step label */}
+              <p className={`text-xs font-semibold text-center line-clamp-2
+                ${isCompleted ? "text-gray-700" : "text-gray-400"}
+              `}>
+                {step.label}
+              </p>
+
+              {/* Connecting line */}
+              {index < TRACKING_STEPS.length - 1 && (
+                <div className={`
+                  h-1 flex-1 mx-0.5 mt-2 rounded
+                  ${isCompleted ? "bg-green-500" : "bg-gray-200"}
+                `} style={{ minWidth: "20px" }} />
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Status text */}
+      <div className="text-center">
+        <p className="text-sm font-semibold text-gray-700 capitalize">
+          {TRACKING_STEPS[currentStepIndex]?.label}
+        </p>
+      </div>
+    </div>
+  );
 };
 
 const Orders = () => {
@@ -72,13 +141,16 @@ const Orders = () => {
               </div>
               <div className="flex gap-2 flex-wrap">
                 <span className={`text-xs font-semibold px-3 py-1 rounded-full capitalize ${STATUS_COLORS[order.status]}`}>
-                  {order.status}
+                  {order.status === "out_for_delivery" ? "Out for Delivery" : order.status}
                 </span>
                 <span className={`text-xs font-semibold px-3 py-1 rounded-full capitalize ${PAYMENT_COLORS[order.paymentStatus]}`}>
                   {order.paymentStatus}
                 </span>
               </div>
             </div>
+
+            {/* Order tracking progress */}
+            {order.status !== "cancelled" && <OrderTracking status={order.status} />}
 
             {/* Order items */}
             <div className="space-y-3 mb-4">

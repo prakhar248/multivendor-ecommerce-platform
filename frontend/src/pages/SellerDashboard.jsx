@@ -183,6 +183,17 @@ const SellerDashboard = () => {
     }
   };
 
+  // Update order status
+  const handleOrderStatus = async (orderId, status) => {
+    try {
+      await api.put(`/orders/${orderId}/status`, { status });
+      toast.success("Order status updated.");
+      fetchOrders();
+    } catch (err) { 
+      toast.error(err.response?.data?.message || "Failed to update status");
+    }
+  };
+
   const TABS = [
     { key: "overview", label: "📊 Overview"    },
     { key: "products", label: "📦 My Products" },
@@ -340,26 +351,35 @@ const SellerDashboard = () => {
                 <th className="px-4 py-3">My Total</th>
                 <th className="px-4 py-3">Payment</th>
                 <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Update Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 bg-white">
               {orders.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-10 text-center text-gray-400">No orders yet.</td>
+                  <td colSpan={7} className="px-4 py-10 text-center text-gray-400">No orders yet.</td>
                 </tr>
               ) : orders.map((o) => (
                 <tr key={o._id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 font-mono text-xs text-gray-400">{o._id.slice(-8)}</td>
-                  <td className="px-4 py-3 text-gray-700">{o.customer?.name}</td>
+                  <td className="px-4 py-3 text-gray-700">{o.customer?.name || o.user?.name}</td>
                   <td className="px-4 py-3 text-gray-500">{o.items.length} item(s)</td>
-                  <td className="px-4 py-3 font-semibold text-brand">₹{o.myTotal?.toLocaleString()}</td>
+                  <td className="px-4 py-3 font-semibold text-brand">₹{(o.myTotal || o.totalPrice).toLocaleString()}</td>
                   <td className="px-4 py-3">
                     <span className={`text-xs px-2 py-0.5 rounded-full font-semibold
                       ${o.paymentStatus === "paid" ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-600"}`}>
                       {o.paymentStatus}
                     </span>
                   </td>
-                  <td className="px-4 py-3 capitalize text-gray-500">{o.orderStatus}</td>
+                  <td className="px-4 py-3 capitalize text-gray-600">{o.status === "out_for_delivery" ? "Out for Delivery" : (o.status || o.orderStatus)}</td>
+                  <td className="px-4 py-3">
+                    <select value={o.status || o.orderStatus || "processing"} onChange={(e) => handleOrderStatus(o._id, e.target.value)}
+                      className="text-xs border border-gray-300 rounded px-2 py-1">
+                      {["processing","shipped","out_for_delivery","delivered","cancelled"].map((s) => (
+                        <option key={s} value={s}>{s === "out_for_delivery" ? "Out for Delivery" : s}</option>
+                      ))}
+                    </select>
+                  </td>
                 </tr>
               ))}
             </tbody>

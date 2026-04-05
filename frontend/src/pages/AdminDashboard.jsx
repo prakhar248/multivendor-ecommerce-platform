@@ -401,12 +401,12 @@ const AdminDashboard = () => {
                       {o.paymentStatus}
                     </span>
                   </td>
-                  <td className="px-4 py-3 capitalize text-gray-600">{o.status}</td>
+                  <td className="px-4 py-3 capitalize text-gray-600">{o.status === "out_for_delivery" ? "Out for Delivery" : o.status}</td>
                   <td className="px-4 py-3">
                     <select value={o.status} onChange={(e) => handleOrderStatus(o._id, e.target.value)}
                       className="text-xs border border-gray-300 rounded px-2 py-1">
-                      {["processing","shipped","delivered","cancelled"].map((s) => (
-                        <option key={s} value={s}>{s}</option>
+                      {["processing","shipped","out_for_delivery","delivered","cancelled"].map((s) => (
+                        <option key={s} value={s}>{s === "out_for_delivery" ? "Out for Delivery" : s}</option>
                       ))}
                     </select>
                   </td>

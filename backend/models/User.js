@@ -74,6 +74,15 @@ const userSchema = new mongoose.Schema(
         createdAt: { type: Date, default: Date.now },
       },
     ],
+
+    // Saved for later items (like Amazon's save for later)
+    savedForLater: [
+      {
+        product: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
+        quantity: { type: Number, required: true, default: 1, min: 1 },
+        savedAt: { type: Date, default: Date.now },
+      },
+    ],
   },
   { timestamps: true }
 );
