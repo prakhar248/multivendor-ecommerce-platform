@@ -23,8 +23,9 @@ const ProductDetail = () => {
   const [rating,    setRating]    = useState(5);
   const [comment,   setComment]   = useState("");
   const [canReview, setCanReview] = useState(false);
-  const [zoomStyle, setZoomStyle] = useState({});
   const [showZoom,  setShowZoom]  = useState(false);
+  const [lensStyle, setLensStyle] = useState({});
+  const [zoomStyle, setZoomStyle] = useState({});
 
   useEffect(() => {
     const fetch = async () => {
@@ -105,16 +106,37 @@ const ProductDetail = () => {
     : product.images?.[activeImg]?.url;
 
   const handleMouseMove = (e) => {
-    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - left;
-    const y = e.clientY - top;
-    const xPercent = (x / width) * 100;
-    const yPercent = (y / height) * 100;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const width = rect.width;
+    const height = rect.height;
 
+    const lensSize = 150;
+
+    let lensX = x - lensSize / 2;
+    let lensY = y - lensSize / 2;
+
+    // Clamp lens inside image boundaries
+    lensX = Math.max(0, Math.min(lensX, width - lensSize));
+    lensY = Math.max(0, Math.min(lensY, height - lensSize));
+
+    const xPercent = (lensX / width) * 100;
+    const yPercent = (lensY / height) * 100;
+
+    // Lens overlay style
+    setLensStyle({
+      left: `${lensX}px`,
+      top: `${lensY}px`,
+      width: `${lensSize}px`,
+      height: `${lensSize}px`,
+    });
+
+    // Zoom panel style (300% zoom for better detail)
     setZoomStyle({
       backgroundImage: `url(${imageUrl})`,
       backgroundPosition: `${xPercent}% ${yPercent}%`,
-      backgroundSize: "200%"
+      backgroundSize: "300%",
     });
   };
 
@@ -122,13 +144,13 @@ const ProductDetail = () => {
     <div className="max-w-6xl mx-auto px-4 py-10">
       <div className="grid md:grid-cols-2 gap-10">
 
-        {/* ── Image Gallery with Zoom ───────────────────────────────── */}
+        {/* ── Image Gallery with Amazon-Style Zoom ───────────────────────────────── */}
         <div>
-          <div className="flex gap-4">
-            {/* LEFT: Main Image */}
+          <div className="flex gap-6">
+            {/* LEFT: Main Image with Lens Overlay */}
             <div className="flex-1">
               <div
-                className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100 mb-3 cursor-zoom-in transition-all duration-200"
+                className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100 mb-3 cursor-crosshair transition-all duration-200"
                 onMouseMove={handleMouseMove}
                 onMouseEnter={() => setShowZoom(true)}
                 onMouseLeave={() => setShowZoom(false)}
@@ -138,8 +160,17 @@ const ProductDetail = () => {
                   alt={product.name}
                   className="w-full h-full object-cover"
                 />
+
+                {/* Semi-transparent Lens Overlay */}
+                {showZoom && (
+                  <div
+                    className="absolute bg-white/25 border-2 border-gray-400 pointer-events-none transition-all duration-75"
+                    style={lensStyle}
+                  />
+                )}
               </div>
-              {/* Thumbnail row */}
+
+              {/* Thumbnail Gallery */}
               {product.images.length > 1 && (
                 <div className="flex gap-2">
                   {product.images.map((img, i) => (
@@ -147,7 +178,7 @@ const ProductDetail = () => {
                       key={i}
                       onClick={() => setActiveImg(i)}
                       className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors
-                        ${activeImg === i ? "border-brand" : "border-transparent"}`}
+                        ${activeImg === i ? "border-brand" : "border-transparent hover:border-gray-300"}`}
                     >
                       <img
                         src={typeof img === "string" ? img : img.url}
@@ -160,11 +191,11 @@ const ProductDetail = () => {
               )}
             </div>
 
-            {/* RIGHT: Zoomed Image (hidden on mobile) */}
+            {/* RIGHT: Zoomed Image Panel (hidden on mobile) */}
             {showZoom && (
-              <div className="hidden lg:block w-96 h-96 border border-gray-300 rounded-2xl overflow-hidden bg-gray-50 sticky top-10">
+              <div className="hidden lg:block w-96 h-96 border-2 border-gray-300 rounded-2xl overflow-hidden bg-gray-50 sticky top-10 shadow-md">
                 <div
-                  className="w-full h-full bg-no-repeat transition-all duration-100"
+                  className="w-full h-full bg-no-repeat transition-all duration-75"
                   style={zoomStyle}
                 />
               </div>
