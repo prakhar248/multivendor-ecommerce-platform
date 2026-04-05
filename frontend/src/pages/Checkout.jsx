@@ -185,12 +185,17 @@ const Checkout = () => {
   const handleAddressSubmit = (e) => {
     e.preventDefault();
 
+    console.log("📋 Address submit - buyNowItem:", buyNowItem);
+    console.log("📋 Cart items:", cart?.items);
+    console.log("📋 Total items array:", items);
+
     if (!selectedAddressId) {
       return toast.error("Please select or add an address to continue");
     }
 
-    if (items.length === 0) {
-      return toast.error("Your cart is empty");
+    // Check if we have items: either from Buy Now OR from Cart
+    if (!buyNowItem && (!cart?.items || cart.items.length === 0)) {
+      return toast.error("Your cart is empty. Please add items or use Buy Now.");
     }
 
     setStep(1);
@@ -199,12 +204,19 @@ const Checkout = () => {
   // ── Consolidated Payment Flow ────────────────────────────────────
   // Step 1 → 2: Create order + Razorpay order + Open Payment
   const handlePayNow = async () => {
+    // Safety check: ensure we have items before processing
+    if (!items || items.length === 0) {
+      toast.error("No items to checkout. Please add items to your cart or use Buy Now.");
+      return;
+    }
+
     setLoading(true);
     try {
       const shippingAddress = getCurrentAddress();
 
       console.log("💳 Payment flow started");
-      console.log("📦 Cart items:", items.length);
+      console.log("📦 Items count:", items.length);
+      console.log("🛍️ Is Buy Now:", !!buyNowItem);
       console.log("📍 Shipping address:", shippingAddress);
 
       // Step 1: Create order in MongoDB
