@@ -78,16 +78,23 @@ const ProductDetail = () => {
 
   const handleBuyNow = () => {
     if (!user) return navigate("/login");
-    const productData = {
-      _id: product._id,
-      name: product.name,
-      price: product.discountedPrice || product.price,
-      image: typeof product.images?.[0] === "string" ? product.images[0] : product.images?.[0]?.url,
-      quantity: qty,
-      seller: product.seller?._id
-    };
-    localStorage.setItem("buyNowProduct", JSON.stringify(productData));
-    navigate("/checkout");
+    // Navigate to checkout with Buy Now item passed via location.state
+    // No cart dependency - direct checkout
+    navigate("/checkout", {
+      state: {
+        buyNowItem: {
+          product: {
+            _id: product._id,
+            name: product.name,
+            images: product.images,
+            price: product.price,
+            discountedPrice: product.discountedPrice,
+          },
+          quantity: qty,
+          priceAtAdd: product.discountedPrice || product.price,
+        },
+      },
+    });
   };
 
   const handleReview = async (e) => {

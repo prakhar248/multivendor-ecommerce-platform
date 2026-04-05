@@ -6,7 +6,7 @@
 // ============================================================
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import api from "../api/axios";
 import addressService from "../services/addressService";
 import AddressForm from "../components/AddressForm";
@@ -20,6 +20,8 @@ const Checkout = () => {
   const { cart, clearCart } = useCart();
   const { user }            = useAuth();
   const navigate            = useNavigate();
+  const location            = useLocation();
+  const buyNowItem          = location.state?.buyNowItem;
 
   const [step,    setStep]    = useState(0);
   const [loading, setLoading] = useState(false);
@@ -39,16 +41,9 @@ const Checkout = () => {
     pincode: "",
   });
 
-  // Buy Now handling
-  const [buyNowProduct, setBuyNowProduct] = useState(null);
-
-  // Determine items: buyNowProduct or cart
-  const items = buyNowProduct 
-    ? [{
-        product: buyNowProduct,
-        quantity: buyNowProduct.quantity,
-        priceAtAdd: buyNowProduct.price
-      }]
+  // Determine items: buyNowItem (from navigation state) or cart
+  const items = buyNowItem
+    ? [buyNowItem]
     : cart?.items || [];
 
   // Calculate prices
@@ -57,19 +52,9 @@ const Checkout = () => {
   const tax        = Math.round(subtotal * 0.18);
   const grandTotal = subtotal + shipping + tax;
 
-  // Fetch saved addresses on mount + check for buyNowProduct
+  // Fetch saved addresses on mount
   useEffect(() => {
     fetchSavedAddresses();
-    
-    // Check for buyNowProduct from localStorage
-    const buyNow = localStorage.getItem("buyNowProduct");
-    if (buyNow) {
-      try {
-        setBuyNowProduct(JSON.parse(buyNow));
-      } catch (err) {
-        console.error("Error parsing buyNowProduct:", err);
-      }
-    }
   }, []);
 
   const fetchSavedAddresses = async () => {
@@ -268,9 +253,9 @@ const Checkout = () => {
 
             console.log("✅ 3. Payment verified!");
             
-            // Clear cart or buyNowProduct
-            if (buyNowProduct) {
-              localStorage.removeItem("buyNowProduct");
+            // Clear cart or buyNowItem
+            if (buyNowItem) {
+              // No cleanup needed for state-passed item
             } else {
               clearCart();
             }
@@ -311,9 +296,19 @@ const Checkout = () => {
 
   const currentAddress = getCurrentAddress();
 
+  // Show label if this is a direct Buy Now purchase
+  const isBuyNow = !!buyNowItem;
+
   return (
     <div className="max-w-3xl mx-auto px-4 py-10">
-      <h1 className="text-3xl font-bold text-gray-800 mb-6">Checkout</h1>
+      <div className="flex items-center gap-3 mb-6">
+        <h1 className="text-3xl font-bold text-gray-800">Checkout</h1>
+        {isBuyNow && (
+          <span className="text-sm font-semibold text-orange-600 bg-orange-100 px-3 py-1 rounded-full">
+            🚀 Direct Purchase
+          </span>
+        )}
+      </div>
 
       {/* Progress bar */}
       <div className="flex items-center mb-10">
@@ -336,7 +331,10 @@ const Checkout = () => {
       {/* ── STEP 0: Shipping Address ───────────────────── */}
       {step === 0 && (
         <form onSubmit={handleAddressSubmit} className="bg-white rounded-lg shadow-md p-6 border border-gray-200 space-y-6">
-          <h2 className="font-bold text-gray-800 text-lg">Shipping Address</h2>
+          <div className="flex justify-between items-center">
+            <h2 className="font-bold text-gray-800 text-lg">Shipping Address</h2>
+            {isBuyNow && <span className="text-xs text-gray-500">Step 1 of 2</span>}
+          </div>
 
           {/* Case 1: No addresses yet */}
           {savedAddresses.length === 0 && (
@@ -458,12 +456,10 @@ const Checkout = () => {
           <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
             <h2 className="font-bold text-gray-800 mb-4">Order Review</h2>
             {items.map((item, i) => {
-              const product = buyNowProduct ? item.product : item.product;
-              const imageUrl = buyNowProduct 
-                ? item.product.image 
-                : typeof item.product.images?.[0] === "string"
-                  ? item.product.images[0]
-                  : item.product.images?.[0]?.url;
+              const product = item.product;
+              const imageUrl = typeof item.product.images?.[0] === "string"
+                 ? item.product.images[0]
+                 : item.product.images?.[0]?.url;
               return (
                 <div key={i} className="flex items-center gap-3 mb-3">
                   <img src={imageUrl} alt={product.name}
