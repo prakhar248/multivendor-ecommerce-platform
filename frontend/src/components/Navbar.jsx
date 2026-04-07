@@ -17,7 +17,7 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
 
         {/* Brand */}
-        <Link to="/" className="text-2xl font-bold text-brand">🛍️ ShopNow</Link>
+        <Link to="/" className="text-2xl font-bold text-brand">🛍️ ShopperStop</Link>
 
         {/* Center links — role-aware */}
         <div className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600">

@@ -115,10 +115,10 @@ const PaymentFailed = () => {
         <p className="text-xs text-gray-400 mt-8">
           Need help? Contact us at{" "}
           <a
-            href="mailto:support@shopnow.com"
+            href="mailto:support@shopperstop.com"
             className="text-brand hover:underline"
           >
-            support@shopnow.com
+            support@shopperstop.com
           </a>
         </p>
       </div>

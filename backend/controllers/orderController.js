@@ -82,7 +82,7 @@ exports.placeOrder = async (req, res, next) => {
     try {
       await sendEmail(
         req.user.email,
-        "Order Confirmation - ShopNow",
+        "Order Confirmation - ShopperStop",
         `<p>Hi ${req.user.name},</p>
          <p>Your order has been placed successfully!</p>
          <p><strong>Order ID:</strong> ${order._id}</p>
@@ -90,7 +90,7 @@ exports.placeOrder = async (req, res, next) => {
          <p><strong>Status:</strong> Awaiting Payment</p>
          <p>Please proceed to payment to confirm your order.</p>
          <br/>
-         <p>Thank you for shopping with ShopNow!</p>`
+         <p>Thank you for shopping with ShopperStop!</p>`
       );
       console.log("✅ Order confirmation email sent to:", req.user.email);
     } catch (emailError) {
@@ -165,7 +165,7 @@ exports.updateOrderStatus = async (req, res, next) => {
            <p>You can track your order status anytime in your account dashboard.</p>
            <br/>
            <p>Thank you for your patience!</p>
-           <p>ShopNow Team</p>`
+           <p>ShopperStop Team</p>`
         );
         console.log("✅ Shipped email sent to:", order.user.email);
       } catch (emailError) {
@@ -185,7 +185,7 @@ exports.updateOrderStatus = async (req, res, next) => {
            <p>We hope you enjoy your purchase. Your satisfaction is important to us.</p>
            <p>Please share your feedback in the product reviews - your reviews help other customers!</p>
            <br/>
-           <p>Thank you for shopping with ShopNow!</p>`
+           <p>Thank you for shopping with ShopperStop!</p>`
         );
         console.log("✅ Delivered email sent to:", order.user.email);
       } catch (emailError) {

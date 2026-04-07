@@ -114,7 +114,7 @@ const Auth = ({ mode = "login" }) => {
 
           {/* Header */}
           <div className="text-center mb-6">
-            <Link to="/" className="text-3xl font-bold text-brand">🛍️ ShopNow</Link>
+            <Link to="/" className="text-3xl font-bold text-brand">🛍️ ShopperStop</Link>
             <p className="text-gray-400 text-sm mt-2">
               {tab === "login" ? "Sign in to your account" : "Create your account"}
             </p>

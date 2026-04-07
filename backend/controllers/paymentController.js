@@ -163,7 +163,7 @@ exports.verifyPayment = async (req, res, next) => {
          <p>Your order is now confirmed and will be processed by our team.</p>
          <p>You will receive a shipping notification once your items are dispatched.</p>
          <br/>
-         <p>Thank you for shopping with ShopNow!</p>`
+         <p>Thank you for shopping with ShopperStop!</p>`
       );
       console.log("✅ Payment success email sent to:", order.user.email);
     } catch (emailError) {
@@ -363,7 +363,7 @@ exports.handlePayUSuccess = async (req, res, next) => {
            <p>Your order is now confirmed and will be processed by our team.</p>
            <p>You will receive a shipping notification once your items are dispatched.</p>
            <br/>
-           <p>Thank you for shopping with ShopNow!</p>`
+           <p>Thank you for shopping with ShopperStop!</p>`
         );
         console.log("✅ Payment success email sent to:", order.user.email);
       } catch (emailError) {

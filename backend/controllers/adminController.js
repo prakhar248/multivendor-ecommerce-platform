@@ -144,7 +144,7 @@ exports.approveSeller = async (req, res, next) => {
     try {
       await sendEmail(
         seller.user.email,
-        "🎉 Your Store Has Been Approved - ShopNow",
+        "🎉 Your Store Has Been Approved - ShopperStop",
         `<p>Hi ${seller.user.name},</p>
          <p>Congratulations! Your seller account has been approved!</p>
          <p><strong>Store Name:</strong> ${seller.storeName}</p>
@@ -158,7 +158,7 @@ exports.approveSeller = async (req, res, next) => {
            <li>Monitor orders and customer reviews</li>
          </ul>
          <br/>
-         <p>Best of luck with your store! We're excited to have you as part of ShopNow.</p>
+         <p>Best of luck with your store! We're excited to have you as part of ShopperStop.</p>
          <p>If you have any questions, feel free to contact our support team.</p>`
       );
       console.log("✅ Seller approval email sent to:", seller.user.email);

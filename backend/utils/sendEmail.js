@@ -12,7 +12,7 @@ const sendEmail = async (to, subject, html) => {
   });
 
   const info = await transporter.sendMail({
-    from: `"ShopNow" <${process.env.EMAIL_USER}>`,
+    from: `"ShopperStop" <${process.env.EMAIL_USER}>`,
     to,
     subject,
     html,
