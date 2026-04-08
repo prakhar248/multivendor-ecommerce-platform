@@ -25,10 +25,15 @@ const sendEmail = async ({ to, subject, html }) => {
       html,
     });
 
-    console.log("Email sent successfully:", response.id);
+    if (response.error) {
+      console.error("❌ Resend API Error:", response.error);
+      throw new Error(response.error.message || "Resend API error");
+    }
+
+    console.log("✅ Email sent successfully:", response.id);
     return response;
   } catch (err) {
-    console.error("Email sending failed:", err);
+    console.error("❌ Email sending failed:", err.message);
     throw err;
   }
 };
