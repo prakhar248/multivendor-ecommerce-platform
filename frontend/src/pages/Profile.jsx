@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import api from "../api/axios";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
-import { User, Mail, Phone, Calendar, Package, ShoppingCart, CheckCircle, AlertCircle, Pencil } from "lucide-react";
+import { User, Mail, Phone, Calendar, Package, ShoppingCart, CheckCircle, AlertCircle, Pencil, Lock } from "lucide-react";
 
 const Profile = () => {
   const { user, login, fetchProfile } = useAuth();
@@ -18,6 +18,14 @@ const Profile = () => {
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [otp, setOtp] = useState("");
   const [verifyLoading, setVerifyLoading] = useState(false);
+
+  // Change password state
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+  const [changePasswordStep, setChangePasswordStep] = useState("send-otp"); // send-otp | verify-otp | set-password
+  const [changePasswordOtp, setChangePasswordOtp] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [changePasswordLoading, setChangePasswordLoading] = useState(false);
 
   useEffect(() => {
     // Explicit fetch profile when component mounts, ensuring we have latest DB state
@@ -67,6 +75,59 @@ const Profile = () => {
       toast.error(err.response?.data?.message || "Verification failed");
     } finally {
       setVerifyLoading(false);
+    }
+  };
+
+  // ── Change Password Handlers ────────────────────────────────────
+  const handleInitiatePasswordChange = async () => {
+    try {
+      setChangePasswordLoading(true);
+      const { data } = await api.post("/auth/send-otp", { email: user.email });
+      toast.success(data.message || "OTP sent to your email");
+      setChangePasswordStep("verify-otp");
+      setShowChangePasswordModal(true);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to send OTP");
+    } finally {
+      setChangePasswordLoading(false);
+    }
+  };
+
+  const handleVerifyChangePasswordOtp = () => {
+    if (!changePasswordOtp || changePasswordOtp.length !== 6) {
+      return toast.error("Enter a valid 6-digit OTP");
+    }
+    setChangePasswordStep("set-password");
+  };
+
+  const handleSetNewPassword = async () => {
+    if (!newPassword || !confirmPassword) {
+      return toast.error("Please fill in both password fields");
+    }
+    if (newPassword.length < 6) {
+      return toast.error("Password must be at least 6 characters");
+    }
+    if (newPassword !== confirmPassword) {
+      return toast.error("Passwords do not match");
+    }
+
+    try {
+      setChangePasswordLoading(true);
+      const { data } = await api.put("/auth/change-password", {
+        otp: changePasswordOtp,
+        newPassword,
+      });
+      login(data.user, data.token);
+      toast.success("Password changed successfully!");
+      setShowChangePasswordModal(false);
+      setChangePasswordStep("send-otp");
+      setChangePasswordOtp("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to change password");
+    } finally {
+      setChangePasswordLoading(false);
     }
   };
 
@@ -161,6 +222,9 @@ const Profile = () => {
             <button onClick={() => setEditing(true)} className="btn-primary mt-4">
               <Pencil className="w-4 h-4" /> Edit Profile
             </button>
+            <button onClick={handleInitiatePasswordChange} disabled={changePasswordLoading} className="btn-secondary mt-3">
+              <Lock className="w-4 h-4" /> Change Password
+            </button>
           </div>
         )}
       </div>
@@ -208,6 +272,96 @@ const Profile = () => {
             >
               {verifyLoading ? "Verifying..." : "Verify Email"}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Change Password Modal */}
+      {showChangePasswordModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 relative">
+            <button
+              onClick={() => {
+                setShowChangePasswordModal(false);
+                setChangePasswordStep("send-otp");
+                setChangePasswordOtp("");
+                setNewPassword("");
+                setConfirmPassword("");
+              }}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+            >
+              ✕
+            </button>
+
+            {/* Step 1: Verify OTP */}
+            {changePasswordStep === "verify-otp" && (
+              <>
+                <div className="text-center mb-6">
+                  <div className="w-12 h-12 rounded-full bg-brand-light mx-auto mb-3 flex items-center justify-center">
+                    <Lock className="w-6 h-6 text-brand" />
+                  </div>
+                  <h2 className="text-xl font-bold text-gray-900">Verify Your Identity</h2>
+                  <p className="text-sm text-gray-500 mt-1">We sent a 6-digit code to {user.email}</p>
+                </div>
+                <input
+                  type="text"
+                  maxLength={6}
+                  value={changePasswordOtp}
+                  onChange={(e) => setChangePasswordOtp(e.target.value.replace(/\D/g, ""))}
+                  placeholder="000000"
+                  className="w-full text-center text-3xl font-bold tracking-[0.3em] py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-brand mb-4 outline-none"
+                />
+                <button
+                  onClick={handleVerifyChangePasswordOtp}
+                  disabled={changePasswordOtp.length !== 6}
+                  className="btn-primary w-full py-3"
+                >
+                  Verify OTP
+                </button>
+              </>
+            )}
+
+            {/* Step 2: Set New Password */}
+            {changePasswordStep === "set-password" && (
+              <>
+                <div className="text-center mb-6">
+                  <div className="w-12 h-12 rounded-full bg-green-100 mx-auto mb-3 flex items-center justify-center">
+                    <CheckCircle className="w-6 h-6 text-green-600" />
+                  </div>
+                  <h2 className="text-xl font-bold text-gray-900">Create New Password</h2>
+                  <p className="text-sm text-gray-500 mt-1">Choose a strong password</p>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 block mb-1.5">New Password</label>
+                    <input
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="At least 6 characters"
+                      className="input-field"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 block mb-1.5">Confirm Password</label>
+                    <input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Re-enter password"
+                      className="input-field"
+                    />
+                  </div>
+                  <button
+                    onClick={handleSetNewPassword}
+                    disabled={changePasswordLoading || !newPassword || !confirmPassword}
+                    className="btn-primary w-full py-3"
+                  >
+                    {changePasswordLoading ? "Updating..." : "Change Password"}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

@@ -91,41 +91,8 @@ exports.placeOrder = async (req, res, next) => {
       console.log("✅ Cart cleared");
     }
 
-    // Send order confirmation email
-    try {
-      await sendEmail({
-        to: req.user.email,
-        subject: "Order Confirmation — ShopEasy",
-        html: emailTemplate({
-          title: "Order Placed",
-          greeting: `Hi ${req.user.name},`,
-          body: `
-            <p>Your order has been placed successfully!</p>
-            <table style="width:100%; border-collapse:collapse; margin:16px 0;">
-              <tr>
-                <td style="padding:8px 0; color:#64748b; font-size:13px;">Order ID</td>
-                <td style="padding:8px 0; text-align:right; font-weight:600; color:#1e293b; font-size:13px; font-family:monospace;">${order._id}</td>
-              </tr>
-              <tr>
-                <td style="padding:8px 0; color:#64748b; font-size:13px;">Total Amount</td>
-                <td style="padding:8px 0; text-align:right; font-weight:600; color:#1e293b; font-size:13px;">₹${order.totalPrice.toLocaleString()}</td>
-              </tr>
-              <tr>
-                <td style="padding:8px 0; color:#64748b; font-size:13px;">Status</td>
-                <td style="padding:8px 0; text-align:right; font-size:13px;"><span style="background:#fef3c7; color:#92400e; padding:2px 8px; border-radius:4px; font-weight:500;">Awaiting Payment</span></td>
-              </tr>
-            </table>
-            <p>Please proceed to payment to confirm your order.</p>
-          `,
-          ctaText: "Complete Payment",
-          ctaUrl: `${process.env.FRONTEND_URL || "http://localhost:5173"}/orders`,
-          footer: "Thank you for shopping with ShopEasy!",
-        }),
-      });
-      console.log("✅ Order confirmation email sent to:", req.user.email);
-    } catch (emailError) {
-      console.error("Failed to send order confirmation email:", emailError);
-    }
+    // NOTE: Email is NOT sent here. Email will be sent only after successful payment verification.
+    // (See paymentController.js → verifyPayment and handlePayUSuccess)
 
     res.status(201).json({ success: true, order });
   } catch (error) {

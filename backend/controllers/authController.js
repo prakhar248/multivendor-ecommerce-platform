@@ -171,6 +171,61 @@ exports.verifySignupOtp = async (req, res, next) => {
     // Clean up temp table
     await TempUser.findByIdAndDelete(tempUser._id);
 
+    // ── Send Welcome Email ──────────────────────────────────────────
+    try {
+      const roleLabel = tempUser.role === "seller" ? "Seller" : "Customer";
+      
+      let welcomeBody = `
+        <p>Welcome to the <strong>ShopEasy</strong> family! 🎉</p>
+        <p>Your account has been verified and activated successfully. You're now ready to experience seamless shopping.</p>
+      `;
+
+      if (tempUser.role === "seller") {
+        welcomeBody += `
+          <p style="margin-top:20px;"><strong>Next Steps for Sellers:</strong></p>
+          <ul style="margin:12px 0; padding-left:24px;">
+            <li>Complete your store profile</li>
+            <li>Upload your products</li>
+            <li>Get approved by our team</li>
+            <li>Start selling to millions of customers</li>
+          </ul>
+        `;
+      } else {
+        welcomeBody += `
+          <p style="margin-top:20px;"><strong>Quick Tips:</strong></p>
+          <ul style="margin:12px 0; padding-left:24px;">
+            <li>Browse our handpicked collection</li>
+            <li>Add items to your wishlist</li>
+            <li>Enjoy fast & free delivery on orders above ₹500</li>
+            <li>Track your orders in real-time</li>
+          </ul>
+        `;
+      }
+
+      welcomeBody += `
+        <p style="margin-top:20px;">If you have any questions, our support team is always here to help. Happy exploring! 🚀</p>
+      `;
+
+      const html = emailTemplate({
+        title: `Welcome to ShopEasy, ${tempUser.name}!`,
+        greeting: `Hi ${tempUser.name},`,
+        body: welcomeBody,
+        ctaText: tempUser.role === "seller" ? "Go to Seller Dashboard" : "Start Shopping",
+        ctaUrl: `${process.env.FRONTEND_URL || "http://localhost:5173"}/${tempUser.role === "seller" ? "seller-dashboard" : ""}`,
+        footer: "Thank you for joining ShopEasy. We're committed to providing the best shopping experience.",
+      });
+
+      await sendEmail({
+        to: tempUser.email,
+        subject: `Welcome to ShopEasy, ${tempUser.name}! 🎉`,
+        html,
+      });
+      console.log("✅ Welcome email sent to:", tempUser.email);
+    } catch (emailError) {
+      console.error("Failed to send welcome email:", emailError);
+      // Don't fail signup if welcome email fails
+    }
+
     const token = user.generateJWT();
     const userObj = user.toObject();
     delete userObj.password;
@@ -538,18 +593,56 @@ exports.updateProfile = async (req, res, next) => {
 //  @route   PUT /api/auth/change-password
 //  @access  Private
 // ============================================================
+// ============================================================
+//  @desc    Change password with OTP verification
+//  @route   PUT /api/auth/change-password
+//  @access  Private
+//  @body    { otp, newPassword }
+// ============================================================
 exports.changePassword = async (req, res, next) => {
   try {
-    const { currentPassword, newPassword } = req.body;
-    const user = await User.findById(req.user.id).select("+password");
-
-    const isMatch = await user.matchPassword(currentPassword);
-    if (!isMatch) {
-      return res.status(401).json({ success: false, message: "Current password is incorrect." });
+    const { otp, newPassword } = req.body;
+    
+    if (!otp || !newPassword) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "OTP and new password are required." 
+      });
     }
 
+    const user = await User.findById(req.user.id).select("+otpHash +otpExpires");
+
+    // Check if OTP exists
+    if (!user.otpHash || !user.otpExpires) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "No OTP found. Please request a new one." 
+      });
+    }
+
+    // Check if OTP has expired
+    if (user.otpExpires < Date.now()) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "OTP has expired. Please request a new one." 
+      });
+    }
+
+    // Verify OTP
+    if (!verifyOTP(otp, user.otpHash)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Invalid OTP." 
+      });
+    }
+
+    // Update password
     user.password = newPassword;
+    user.otpHash = null;      // Clear OTP after successful use
+    user.otpExpires = null;
     await user.save();
+
+    console.log("✅ Password changed successfully for user:", user.email);
 
     sendTokenResponse(user, 200, res);
   } catch (error) {
