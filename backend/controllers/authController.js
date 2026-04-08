@@ -521,10 +521,10 @@ exports.getMe = async (req, res, next) => {
 // ============================================================
 exports.updateProfile = async (req, res, next) => {
   try {
-    const { name, phone, avatar } = req.body;
+    const { name, phone } = req.body;
     const user = await User.findByIdAndUpdate(
       req.user.id,
-      { name, phone, avatar },
+      { name, phone },
       { new: true, runValidators: true }
     );
     res.status(200).json({ success: true, user });

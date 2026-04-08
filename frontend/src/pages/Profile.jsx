@@ -77,28 +77,18 @@ const Profile = () => {
       <h1 className="text-2xl font-bold text-gray-900 mb-6">My Profile</h1>
 
       <div className="card mb-6">
-        {/* Avatar + info */}
-        <div className="flex items-center gap-4 mb-5">
-          {user.avatar ? (
-            <img src={user.avatar} alt={user.name}
-                 className="w-16 h-16 rounded-full object-cover border-2 border-gray-200" />
-          ) : (
-            <div className="w-16 h-16 rounded-full bg-brand-light flex items-center justify-center">
-              <User className="w-7 h-7 text-brand" />
-            </div>
-          )}
-          <div>
-            <h2 className="text-lg font-bold text-gray-900">{user.name}</h2>
-            <p className="text-gray-500 text-sm flex items-center gap-1.5">
-              <Mail className="w-3.5 h-3.5" /> {user.email}
-            </p>
-            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full mt-1.5 inline-block border
-              ${user.role === "admin"
-                ? "bg-amber-50 text-amber-700 border-amber-200"
-                : "bg-brand-light text-brand border-brand/20"}`}>
-              {user.role}
-            </span>
-          </div>
+        {/* Profile info */}
+        <div className="mb-5">
+          <h2 className="text-lg font-bold text-gray-900">{user.name}</h2>
+          <p className="text-gray-500 text-sm flex items-center gap-1.5 mt-2">
+            <Mail className="w-3.5 h-3.5" /> {user.email}
+          </p>
+          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full mt-2 inline-block border
+            ${user.role === "admin"
+              ? "bg-amber-50 text-amber-700 border-amber-200"
+              : "bg-brand-light text-brand border-brand/20"}`}>
+            {user.role}
+          </span>
         </div>
 
         {/* Verification */}

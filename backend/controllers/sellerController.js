@@ -62,7 +62,7 @@ exports.getSellerStats = async (req, res, next) => {
 // ============================================================
 exports.getSellerProfile = async (req, res, next) => {
   try {
-    const sellerProfile = await Seller.findOne({ user: req.user._id }).populate("user", "name email avatar");
+    const sellerProfile = await Seller.findOne({ user: req.user._id }).populate("user", "name email");
     if (!sellerProfile) {
       return res.status(404).json({ success: false, message: "Seller profile not found." });
     }

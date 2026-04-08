@@ -291,8 +291,7 @@ const AdminDashboard = () => {
             <tbody className="divide-y divide-gray-100 bg-white">
               {users.map((u) => (
                 <tr key={u._id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 flex items-center gap-2">
-                    <img src={u.avatar} alt={u.name} className="w-8 h-8 rounded-full object-cover" />
+                  <td className="px-4 py-3">
                     <span className="font-medium text-gray-700">{u.name}</span>
                   </td>
                   <td className="px-4 py-3 text-gray-500">{u.email}</td>

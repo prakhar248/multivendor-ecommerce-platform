@@ -32,11 +32,6 @@ const sellerSchema = new mongoose.Schema(
       maxlength: [500, "Store description cannot exceed 500 characters"],
     },
 
-    storeLogo: {
-      type:    String,
-      default: "", // Cloudinary URL, optional
-    },
-
     // ── Admin Approval ──────────────────────────────────────
     // Sellers start as NOT approved. Admin must flip this to true
     // before their products appear publicly and they can add new ones.

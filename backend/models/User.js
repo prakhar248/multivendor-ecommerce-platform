@@ -53,10 +53,6 @@ const userSchema = new mongoose.Schema(
     resetOtpHash:    { type: String, select: false },
     resetOtpExpires: { type: Date,   select: false },
 
-    avatar: {
-      type:    String,
-      default: "https://res.cloudinary.com/demo/image/upload/v1/default-avatar.png",
-    },
     phone: { type: String, default: "" },
 
     // Addresses for delivery

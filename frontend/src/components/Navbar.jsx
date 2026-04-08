@@ -117,14 +117,9 @@ const Navbar = () => {
 
               {/* Profile */}
               <Link to="/profile" className="flex items-center gap-2 text-sm text-gray-700 hover:text-brand transition-colors">
-                {user.avatar ? (
-                  <img src={user.avatar} alt={user.name}
-                       className="w-8 h-8 rounded-full object-cover border-2 border-gray-200" />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-brand-light flex items-center justify-center">
-                    <User className="w-4 h-4 text-brand" />
-                  </div>
-                )}
+                <div className="w-8 h-8 rounded-full bg-brand-light flex items-center justify-center">
+                  <User className="w-4 h-4 text-brand" />
+                </div>
                 <span className="font-medium">{user.name.split(" ")[0]}</span>
               </Link>
 

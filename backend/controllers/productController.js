@@ -132,8 +132,8 @@ exports.getProducts = async (req, res, next) => {
 exports.getProductById = async (req, res, next) => {
   try {
     const product = await Product.findById(req.params.id)
-      .populate("seller",        "name avatar")
-      .populate("reviews.user",  "name avatar");
+      .populate("seller",        "name")
+      .populate("reviews.user",  "name");
 
     if (!product) {
       return res.status(404).json({ success: false, message: "Product not found." });
@@ -219,7 +219,7 @@ exports.getProductsBySeller = async (req, res, next) => {
       seller: req.params.sellerId,
       isActive: true
     })
-    .populate("seller", "name avatar")
+    .populate("seller", "name")
     .sort({ createdAt: -1 });
 
     res.json({
