@@ -102,7 +102,7 @@ const AdminDashboard = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold text-gray-800 mb-2">Admin Dashboard</h1>
-      <p className="text-gray-400 text-sm mb-6">Manage the entire ShopperStop platform</p>
+      <p className="text-gray-400 text-sm mb-6">Manage the entire ShopEasy platform</p>
 
       {/* Tabs */}
       <div className="flex gap-1 mb-8 border-b border-gray-200 overflow-x-auto">

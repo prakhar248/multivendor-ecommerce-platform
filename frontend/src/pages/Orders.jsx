@@ -142,7 +142,7 @@ const Orders = () => {
           key: paymentData.keyId,
           amount: paymentData.amount,
           currency: paymentData.currency,
-          name: "ShopperStop",
+          name: "ShopEasy",
           description: `Order #${orderId}`,
           order_id: paymentData.razorpayOrderId,
           handler: async (response) => {

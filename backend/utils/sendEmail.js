@@ -25,7 +25,7 @@ const transporter = nodemailer.createTransport({
 const sendEmail = async ({ to, subject, html }) => {
   try {
     const info = await transporter.sendMail({
-      from: `"ShopperStop" <${process.env.EMAIL_USER}>`,
+      from: `"ShopEasy" <${process.env.EMAIL_USER}>`,
       to,
       subject,
       html,

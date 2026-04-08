@@ -81,16 +81,16 @@ exports.signup = async (req, res, next) => {
       title: "Verify Your Account",
       greeting: `Hi ${user.name},`,
       body: `
-        <p>Welcome to <strong>ShopperStop</strong>! We're excited to have you on board.</p>
+        <p>Welcome to <strong>ShopEasy</strong>! We're excited to have you on board.</p>
         <p>Please use the verification code below to activate your account:</p>
       `,
       otp,
-      footer: "If you didn't create an account on ShopperStop, you can safely ignore this email.",
+      footer: "If you didn't create an account on ShopEasy, you can safely ignore this email.",
     });
 
     await sendEmail({
       to: user.email,
-      subject: "Verify Your Account — ShopperStop",
+      subject: "Verify Your Account — ShopEasy",
       html,
     });
 
@@ -125,7 +125,7 @@ exports.verifyOtp = async (req, res, next) => {
       return res.status(404).json({ success: false, message: "User not found." });
     }
 
-    if (user.isVerified) {
+    if (user.isEmailVerified) {
       return res.status(400).json({ success: false, message: "Email is already verified." });
     }
 
@@ -143,14 +143,20 @@ exports.verifyOtp = async (req, res, next) => {
     }
 
     // Mark as verified, clear OTP fields
-    user.isVerified = true;
+    user.isEmailVerified = true;
     user.otpHash    = undefined;
     user.otpExpires = undefined;
     await user.save();
 
+    const token = user.generateJWT();
+    const userObj = user.toObject();
+    delete userObj.password;
+
     res.status(200).json({
       success: true,
       message: "Email verified successfully! You can now log in.",
+      token,
+      user: userObj
     });
   } catch (error) {
     next(error);
@@ -175,7 +181,7 @@ exports.resendOtp = async (req, res, next) => {
       return res.status(404).json({ success: false, message: "User not found." });
     }
 
-    if (user.isVerified) {
+    if (user.isEmailVerified) {
       return res.status(400).json({ success: false, message: "Email is already verified." });
     }
 
@@ -194,7 +200,7 @@ exports.resendOtp = async (req, res, next) => {
       title: "Verify Your Account",
       greeting: `Hi ${user.name},`,
       body: `
-        <p>Here is your new verification code for <strong>ShopperStop</strong>:</p>
+        <p>Here is your new verification code for <strong>ShopEasy</strong>:</p>
       `,
       otp,
       footer: "If you didn't request this code, you can safely ignore this email.",
@@ -202,7 +208,7 @@ exports.resendOtp = async (req, res, next) => {
 
     await sendEmail({
       to: user.email,
-      subject: "Your New Verification Code — ShopperStop",
+      subject: "Your New Verification Code — ShopEasy",
       html,
     });
 
@@ -239,12 +245,11 @@ exports.login = async (req, res, next) => {
       return res.status(401).json({ success: false, message: "Invalid credentials." });
     }
 
-    if (!user.isVerified) {
+    if (!user.isEmailVerified) {
       return res.status(403).json({
         success: false,
-        message: "Please verify your email before logging in.",
-        email: user.email,
-        requiresVerification: true,
+        message: "Email not verified",
+        isEmailVerified: false,
       });
     }
 
@@ -298,7 +303,7 @@ exports.forgotPassword = async (req, res, next) => {
       title: "Reset Your Password",
       greeting: `Hi ${user.name},`,
       body: `
-        <p>We received a request to reset your <strong>ShopperStop</strong> password.</p>
+        <p>We received a request to reset your <strong>ShopEasy</strong> password.</p>
         <p>Use the code below to reset your password:</p>
       `,
       otp,
@@ -307,7 +312,7 @@ exports.forgotPassword = async (req, res, next) => {
 
     await sendEmail({
       to: user.email,
-      subject: "Reset Your Password — ShopperStop",
+      subject: "Reset Your Password — ShopEasy",
       html,
     });
 

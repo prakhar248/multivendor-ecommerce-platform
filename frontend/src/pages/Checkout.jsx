@@ -259,7 +259,7 @@ const Checkout = () => {
         key: paymentData.keyId,
         amount: paymentData.amount,
         currency: paymentData.currency,
-        name: "ShopperStop",
+        name: "ShopEasy",
         description: `Order #${createdOrderId}`,
         order_id: paymentData.razorpayOrderId,
 
@@ -630,7 +630,7 @@ const Checkout = () => {
                 </p>
               ) : (
                 <p className="text-xs text-gray-600">
-                  💡 PayU will redirect you to a secure payment page. After payment, you'll return to ShopperStop automatically.
+                  💡 PayU will redirect you to a secure payment page. After payment, you'll return to ShopEasy automatically.
                 </p>
               )}
             </div>

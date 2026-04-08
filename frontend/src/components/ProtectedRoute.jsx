@@ -27,6 +27,9 @@ const ProtectedRoute = ({
   // Not logged in
   if (!user) return <Navigate to="/login" replace />;
 
+  // Email verification check
+  if (!user.isEmailVerified) return <Navigate to={`/verify-otp?email=${encodeURIComponent(user.email)}`} replace />;
+
   // Admin-only check
   if (adminOnly && user.role !== "admin") return <Navigate to="/" replace />;
 

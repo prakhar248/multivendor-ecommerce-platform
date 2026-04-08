@@ -8,7 +8,7 @@ mongoose.connect(process.env.MONGO_URI).then(async () => {
     email: "admin@test.com",
     password: "123456",
     role: "admin",
-    isVerified: true
+    isEmailVerified: true
   });
 
   console.log("Admin created:", admin.email);

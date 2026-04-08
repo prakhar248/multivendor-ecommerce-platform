@@ -52,7 +52,7 @@ const ForgotPassword = () => {
           <div className="text-center mb-6">
             <Link to="/" className="inline-flex items-center gap-2 text-2xl font-bold text-brand">
               <ShoppingCart className="w-6 h-6" />
-              ShopperStop
+              ShopEasy
             </Link>
           </div>
 

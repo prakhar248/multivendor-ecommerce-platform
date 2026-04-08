@@ -154,7 +154,7 @@ exports.verifyPayment = async (req, res, next) => {
     try {
       await sendEmail({
         to: order.user.email,
-        subject: "Payment Successful — Order Confirmed! — ShopperStop",
+        subject: "Payment Successful — Order Confirmed! — ShopEasy",
         html: emailTemplate({
           title: "Payment Confirmed",
           greeting: `Hi ${order.user.name},`,
@@ -178,7 +178,7 @@ exports.verifyPayment = async (req, res, next) => {
           `,
           ctaText: "View My Orders",
           ctaUrl: `${process.env.FRONTEND_URL || "http://localhost:5173"}/orders`,
-          footer: "Thank you for shopping with ShopperStop!",
+          footer: "Thank you for shopping with ShopEasy!",
         }),
       });
       console.log("✅ Payment success email sent to:", order.user.email);
@@ -368,7 +368,7 @@ exports.handlePayUSuccess = async (req, res, next) => {
       try {
         await sendEmail({
           to: order.user.email,
-          subject: "Payment Successful — Order Confirmed! — ShopperStop",
+          subject: "Payment Successful — Order Confirmed! — ShopEasy",
           html: emailTemplate({
             title: "Payment Confirmed",
             greeting: `Hi ${order.user.name},`,
@@ -392,7 +392,7 @@ exports.handlePayUSuccess = async (req, res, next) => {
             `,
             ctaText: "View My Orders",
             ctaUrl: `${process.env.FRONTEND_URL || "http://localhost:5173"}/orders`,
-            footer: "Thank you for shopping with ShopperStop!",
+            footer: "Thank you for shopping with ShopEasy!",
           }),
         });
         console.log("✅ Payment success email sent to:", order.user.email);

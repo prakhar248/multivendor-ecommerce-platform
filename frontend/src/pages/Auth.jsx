@@ -109,7 +109,7 @@ const Auth = ({ mode = "login" }) => {
           <div className="text-center mb-6">
             <Link to="/" className="inline-flex items-center gap-2 text-2xl font-bold text-brand">
               <ShoppingCart className="w-6 h-6" />
-              ShopperStop
+              ShopEasy
             </Link>
             <p className="text-gray-500 text-sm mt-2">
               {tab === "login" ? "Sign in to your account" : "Create your account"}

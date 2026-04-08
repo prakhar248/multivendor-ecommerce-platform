@@ -109,7 +109,7 @@ exports.getPendingSellers = async (req, res, next) => {
 exports.getAllSellers = async (req, res, next) => {
   try {
     const sellers = await Seller.find({})
-      .populate("user", "name email createdAt isVerified")
+      .populate("user", "name email createdAt isEmailVerified")
       .populate("approvedBy", "name")
       .sort("-createdAt");
 
@@ -145,7 +145,7 @@ exports.approveSeller = async (req, res, next) => {
     try {
       await sendEmail({
         to: seller.user.email,
-        subject: "Your Store Has Been Approved! — ShopperStop",
+        subject: "Your Store Has Been Approved! — ShopEasy",
         html: emailTemplate({
           title: "Store Approved!",
           greeting: `Hi ${seller.user.name},`,
@@ -164,7 +164,7 @@ exports.approveSeller = async (req, res, next) => {
               <li>Set your pricing and manage inventory</li>
               <li>Monitor orders and customer reviews</li>
             </ul>
-            <p>Best of luck with your store! We're excited to have you as part of ShopperStop.</p>
+            <p>Best of luck with your store! We're excited to have you as part of ShopEasy.</p>
           `,
           ctaText: "Go to Seller Dashboard",
           ctaUrl: `${process.env.FRONTEND_URL || "http://localhost:5173"}/seller`,

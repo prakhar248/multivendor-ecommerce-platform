@@ -4,6 +4,7 @@
 // ============================================================
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import api from "../api/axios";
 import { toast } from "react-toastify";
 import {
@@ -21,6 +22,7 @@ const VerifyOtp = () => {
   const [searchParams]    = useSearchParams();
   const emailFromUrl      = searchParams.get("email") || "";
   const navigate          = useNavigate();
+  const { login }         = useAuth();
 
   const [otp, setOtp]             = useState(Array(OTP_LENGTH).fill(""));
   const [loading, setLoading]     = useState(false);
@@ -39,7 +41,7 @@ const VerifyOtp = () => {
   // Auto-redirect after success
   useEffect(() => {
     if (!success) return;
-    const timeout = setTimeout(() => navigate("/login", { replace: true }), 3000);
+    const timeout = setTimeout(() => navigate("/", { replace: true }), 3000);
     return () => clearTimeout(timeout);
   }, [success, navigate]);
 
@@ -101,6 +103,9 @@ const VerifyOtp = () => {
         otp: otpString,
       });
       toast.success(data.message);
+      if (data.token && data.user) {
+        login(data.user, data.token); // update the auth context to isEmailVerified: true
+      }
       setSuccess(true);
     } catch (err) {
       const msg = err.response?.data?.message || "Verification failed.";
@@ -135,7 +140,7 @@ const VerifyOtp = () => {
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Email Verified!</h1>
           <p className="text-gray-500 text-sm mb-6 leading-relaxed">
-            Your account has been verified successfully. Redirecting to login...
+            Your account has been verified successfully. Redirecting...
           </p>
           <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
             <div
@@ -149,8 +154,8 @@ const VerifyOtp = () => {
               to { width: 0%; }
             }
           `}</style>
-          <Link to="/login" className="inline-block mt-6 text-sm text-indigo-600 hover:text-indigo-700 font-medium">
-            Go to Login Now →
+          <Link to="/" className="inline-block mt-6 text-sm text-indigo-600 hover:text-indigo-700 font-medium">
+            Continue →
           </Link>
         </div>
       </div>

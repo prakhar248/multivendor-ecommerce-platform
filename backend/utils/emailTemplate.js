@@ -1,7 +1,7 @@
 // ============================================================
 //  utils/emailTemplate.js — Branded HTML email wrapper
 //  Supports OTP display, CTA button, and general content.
-//  Branding: ShopperStop
+//  Branding: ShopEasy
 //  Usage: emailTemplate({ title, greeting, body, otp, footer })
 // ============================================================
 
@@ -59,7 +59,7 @@ const emailTemplate = ({ title, greeting, body, otp, ctaText, ctaUrl, footer }) 
           <tr>
             <td style="background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%); padding:28px 32px; text-align:center;">
               <h1 style="margin:0; color:#ffffff; font-size:24px; font-weight:700; letter-spacing:-0.3px;">
-                🛒 ShopperStop
+                🛒 ShopEasy
               </h1>
               <p style="margin:6px 0 0; color:rgba(255,255,255,0.75); font-size:13px; font-weight:400;">
                 ${title}
@@ -98,7 +98,7 @@ const emailTemplate = ({ title, greeting, body, otp, ctaText, ctaUrl, footer }) 
           <tr>
             <td style="background-color:#f8fafc; padding:16px 32px; text-align:center; border-top:1px solid #e2e8f0;">
               <p style="margin:0; font-size:12px; color:#94a3b8;">
-                &copy; ${new Date().getFullYear()} ShopperStop. All rights reserved.
+                &copy; ${new Date().getFullYear()} ShopEasy. All rights reserved.
               </p>
               <p style="margin:4px 0 0; font-size:11px; color:#cbd5e1;">
                 This is an automated email. Please do not reply directly.

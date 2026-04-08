@@ -51,7 +51,7 @@ const Navbar = () => {
         {/* Brand */}
         <Link to="/" className="flex items-center gap-2 text-xl font-bold text-brand shrink-0">
           <ShoppingCart className="w-6 h-6" />
-          ShopperStop
+          ShopEasy
         </Link>
 
         {/* Center Nav — Desktop */}

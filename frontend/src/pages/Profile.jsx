@@ -1,7 +1,7 @@
 // ============================================================
 //  src/pages/Profile.jsx — User profile with Lucide icons
 // ============================================================
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import api from "../api/axios";
 import { useAuth } from "../context/AuthContext";
@@ -9,23 +9,64 @@ import { toast } from "react-toastify";
 import { User, Mail, Phone, Calendar, Package, ShoppingCart, CheckCircle, AlertCircle, Pencil } from "lucide-react";
 
 const Profile = () => {
-  const { user, updateUser } = useAuth();
+  const { user, login, fetchProfile } = useAuth();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ name: user?.name || "", phone: user?.phone || "" });
   const [loading, setLoading] = useState(false);
+
+  // Email verification state
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [verifyLoading, setVerifyLoading] = useState(false);
+
+  useEffect(() => {
+    // Explicit fetch profile when component mounts, ensuring we have latest DB state
+    fetchProfile();
+  }, []);
 
   const handleUpdate = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const { data } = await api.put("/auth/profile", form);
-      updateUser(data.user);
+      await api.put("/auth/profile", form);
+      // fetch fresh profile
+      fetchProfile();
       toast.success("Profile updated!");
       setEditing(false);
     } catch (err) {
       toast.error(err.response?.data?.message || "Update failed");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSendOtp = async () => {
+    try {
+      setVerifyLoading(true);
+      const { data } = await api.post("/auth/send-otp", { email: user.email });
+      toast.success(data.message || "OTP sent successfully");
+      setShowVerifyModal(true);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to send OTP");
+    } finally {
+      setVerifyLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otp || otp.length !== 6) return toast.error("Enter a valid 6-digit OTP");
+    try {
+      setVerifyLoading(true);
+      const { data } = await api.post("/auth/verify-otp", { email: user.email, otp });
+      // Update tokens and user state dynamically
+      login(data.user, data.token);
+      toast.success(data.message || "Email verified successfully");
+      setShowVerifyModal(false);
+      setOtp("");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Verification failed");
+    } finally {
+      setVerifyLoading(false);
     }
   };
 
@@ -61,13 +102,29 @@ const Profile = () => {
         </div>
 
         {/* Verification */}
-        <div className={`flex items-center gap-2 text-sm p-3 rounded-lg mb-5
-          ${user.isVerified ? "bg-accent-light text-accent-dark" : "bg-amber-50 text-amber-700"}`}>
-          {user.isVerified
-            ? <><CheckCircle className="w-4 h-4" /> Email verified</>
-            : <><AlertCircle className="w-4 h-4" /> Email not verified</>
-          }
-        </div>
+        {user.isEmailVerified ? (
+          <div className="flex items-center gap-2 text-sm p-3 rounded-lg mb-5 bg-green-50 border border-green-200 text-green-800">
+            <CheckCircle className="w-5 h-5 shrink-0" />
+            <span className="font-semibold">✅ Email Verified</span>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between p-4 rounded-lg mb-5 bg-amber-50 border border-amber-200">
+            <div className="flex items-center gap-3 text-amber-800">
+              <AlertCircle className="w-6 h-6 shrink-0 text-amber-500" />
+              <div>
+                <p className="font-semibold">Email not verified</p>
+                <p className="text-xs text-amber-700 mt-0.5">Verify your email to secure your account.</p>
+              </div>
+            </div>
+            <button
+               onClick={handleSendOtp}
+               disabled={verifyLoading}
+               className="px-4 py-2 bg-amber-600 text-white text-sm font-semibold rounded-lg hover:bg-amber-700 transition disabled:opacity-50 whitespace-nowrap"
+            >
+              Verify Email
+            </button>
+          </div>
+        )}
 
         {/* Edit form */}
         {editing ? (
@@ -133,6 +190,37 @@ const Profile = () => {
           <p className="font-semibold text-gray-800 text-sm">My Cart</p>
         </Link>
       </div>
+
+      {/* Verify OTP Modal */}
+      {showVerifyModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 relative">
+            <button onClick={() => setShowVerifyModal(false)} className="absolute top-4 right-4 text-gray-500 hover:text-gray-700">✕</button>
+            <div className="text-center mb-6">
+              <div className="w-12 h-12 rounded-full bg-brand-light mx-auto mb-3 flex items-center justify-center">
+                <Mail className="w-6 h-6 text-brand" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-900">Enter OTP</h2>
+              <p className="text-sm text-gray-500 mt-1">We sent a 6-digit code to {user.email}</p>
+            </div>
+            <input
+              type="text"
+              maxLength={6}
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+              placeholder="000000"
+              className="w-full text-center text-3xl font-bold tracking-[0.3em] py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-brand mb-4 outline-none"
+            />
+            <button
+              onClick={handleVerifyOtp}
+              disabled={verifyLoading || otp.length !== 6}
+              className="btn-primary w-full py-3 mt-2"
+            >
+              {verifyLoading ? "Verifying..." : "Verify Email"}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

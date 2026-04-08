@@ -25,6 +25,7 @@ router.post("/login",            login);
 
 // Public — OTP Verification
 router.post("/verify-otp",      verifyOtp);
+router.post("/send-otp",        resendOtp);
 router.post("/resend-otp",      resendOtp);
 
 // Public — Password Reset

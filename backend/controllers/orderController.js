@@ -83,7 +83,7 @@ exports.placeOrder = async (req, res, next) => {
     try {
       await sendEmail({
         to: req.user.email,
-        subject: "Order Confirmation — ShopperStop",
+        subject: "Order Confirmation — ShopEasy",
         html: emailTemplate({
           title: "Order Placed",
           greeting: `Hi ${req.user.name},`,
@@ -107,7 +107,7 @@ exports.placeOrder = async (req, res, next) => {
           `,
           ctaText: "Complete Payment",
           ctaUrl: `${process.env.FRONTEND_URL || "http://localhost:5173"}/orders`,
-          footer: "Thank you for shopping with ShopperStop!",
+          footer: "Thank you for shopping with ShopEasy!",
         }),
       });
       console.log("✅ Order confirmation email sent to:", req.user.email);
@@ -175,7 +175,7 @@ exports.updateOrderStatus = async (req, res, next) => {
       try {
         await sendEmail({
           to: order.user.email,
-          subject: "Your Order Has Been Shipped! — ShopperStop",
+          subject: "Your Order Has Been Shipped! — ShopEasy",
           html: emailTemplate({
             title: "Order Shipped",
             greeting: `Hi ${order.user.name},`,
@@ -191,7 +191,7 @@ exports.updateOrderStatus = async (req, res, next) => {
             `,
             ctaText: "Track My Order",
             ctaUrl: `${process.env.FRONTEND_URL || "http://localhost:5173"}/orders`,
-            footer: "Thank you for your patience! — The ShopperStop Team",
+            footer: "Thank you for your patience! — The ShopEasy Team",
           }),
         });
         console.log("✅ Shipped email sent to:", order.user.email);
@@ -205,7 +205,7 @@ exports.updateOrderStatus = async (req, res, next) => {
       try {
         await sendEmail({
           to: order.user.email,
-          subject: "Your Order Has Been Delivered! — ShopperStop",
+          subject: "Your Order Has Been Delivered! — ShopEasy",
           html: emailTemplate({
             title: "Order Delivered",
             greeting: `Hi ${order.user.name},`,
@@ -222,7 +222,7 @@ exports.updateOrderStatus = async (req, res, next) => {
             `,
             ctaText: "Write a Review",
             ctaUrl: `${process.env.FRONTEND_URL || "http://localhost:5173"}/orders`,
-            footer: "Thank you for shopping with ShopperStop!",
+            footer: "Thank you for shopping with ShopEasy!",
           }),
         });
         console.log("✅ Delivered email sent to:", order.user.email);
