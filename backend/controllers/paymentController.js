@@ -26,6 +26,7 @@ const Cart     = require("../models/Cart");
 const sendEmail = require("../utils/sendEmail");
 const emailTemplate = require("../utils/emailTemplate");
 const { createPayUPaymentObject, verifyPayUHash } = require("../utils/payuUtils");
+const { calculateDeliveryDates } = require("../utils/deliveryUtils");
 
 // Initialize Razorpay with test keys from .env
 const razorpay = new Razorpay({
@@ -140,6 +141,13 @@ exports.verifyPayment = async (req, res, next) => {
     order.razorpayPaymentId  = razorpay_payment_id;
     order.razorpaySignature  = razorpay_signature;
     order.paidAt             = new Date();
+    
+    // ── Calculate Delivery Dates ────────────────────────────────────
+    const deliveryDates = calculateDeliveryDates(order.paidAt, order.deliveryType);
+    order.expectedShippedAt = deliveryDates.expectedShippedAt;
+    order.expectedOutForDeliveryAt = deliveryDates.expectedOutForDeliveryAt;
+    order.expectedDeliveredAt = deliveryDates.expectedDeliveredAt;
+    
     await order.save();
 
     // ── DECREMENT STOCK (only after confirmed payment) ──────────────
@@ -340,6 +348,13 @@ exports.handlePayUSuccess = async (req, res, next) => {
       order.payuStatus = status;
       order.payuTxnId = txnid;
       order.paidAt = new Date();
+      
+      // ── Calculate Delivery Dates ────────────────────────────────────
+      const deliveryDates = calculateDeliveryDates(order.paidAt, order.deliveryType);
+      order.expectedShippedAt = deliveryDates.expectedShippedAt;
+      order.expectedOutForDeliveryAt = deliveryDates.expectedOutForDeliveryAt;
+      order.expectedDeliveredAt = deliveryDates.expectedDeliveredAt;
+      
       await order.save();
 
       // ── DECREMENT STOCK (only after confirmed payment) ──────────────

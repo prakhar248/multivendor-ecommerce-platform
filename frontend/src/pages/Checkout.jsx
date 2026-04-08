@@ -31,6 +31,7 @@ const Checkout = () => {
   const [savingAddress, setSavingAddress] = useState(false);
   const [orderId, setOrderId] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("razorpay");
+  const [deliveryType, setDeliveryType] = useState("normal"); // NEW: Delivery type selection
   const [payuRedirecting, setPayuRedirecting] = useState(false);
 
   // Address management
@@ -58,7 +59,13 @@ const Checkout = () => {
     return acc + (price * qty);
   }, 0);
 
-  const shipping   = itemsPrice > 500 ? 0 : 50;
+  // Calculate shipping price based on order amount and delivery type
+  // Order >= ₹500: Free delivery (standard), ₹150 for express
+  // Order < ₹500: ₹100 delivery (standard), ₹250 for express
+  const shipping = itemsPrice >= 500
+    ? (deliveryType === "express" ? 150 : 0)
+    : (deliveryType === "express" ? 250 : 100);
+
   const tax        = Math.round(itemsPrice * 0.18);
   const grandTotal = itemsPrice + shipping + tax;
 
@@ -220,6 +227,7 @@ const Checkout = () => {
         shippingPrice: Number(shipping) || 0,
         taxPrice:      Number(tax) || 0,
         totalPrice:    Number(grandTotal) || 0,
+        deliveryType,  // NEW: Include customer's delivery preference
       };
 
       // Step 1: Create order in MongoDB
@@ -417,11 +425,6 @@ const Checkout = () => {
     <div className="max-w-3xl mx-auto px-4 py-10">
       <div className="flex items-center gap-3 mb-6">
         <h1 className="text-3xl font-bold text-gray-800">Checkout</h1>
-        {isBuyNow && (
-          <span className="text-sm font-semibold text-orange-600 bg-orange-100 px-3 py-1 rounded-full">
-            🚀 Direct Purchase
-          </span>
-        )}
       </div>
 
       {/* Progress bar */}
@@ -633,6 +636,76 @@ const Checkout = () => {
                   💡 PayU will redirect you to a secure payment page. After payment, you'll return to ShopEasy automatically.
                 </p>
               )}
+            </div>
+          </div>
+
+          {/* Delivery Type Selection */}
+          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <h2 className="font-bold text-gray-800 mb-4 text-lg">Choose Delivery Speed</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Normal Delivery Option */}
+              <label
+                className={`block p-5 border-2 rounded-xl cursor-pointer transition-all ${
+                  deliveryType === "normal"
+                    ? "border-blue-500 bg-blue-50 shadow-md ring-2 ring-blue-500/30"
+                    : "border-gray-200 hover:border-gray-300 hover:shadow-sm"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="deliveryType"
+                  value="normal"
+                  checked={deliveryType === "normal"}
+                  onChange={(e) => setDeliveryType(e.target.value)}
+                  className="sr-only"
+                />
+                <div className="flex items-start gap-3">
+                  <div className="flex-1">
+                    <p className="font-bold text-gray-900 flex items-center gap-2">
+                      <span className="text-xl">🚚</span> Normal Delivery (5-6 days)
+                    </p>
+                    <p className="text-xs text-gray-600 mt-2">
+                      Shipped after 24 hours → Out for delivery in 2 days → Delivered in 2 hours
+                    </p>
+                    <p className="text-sm font-semibold text-blue-600 mt-2">FREE</p>
+                  </div>
+                  {deliveryType === "normal" && (
+                    <span className="text-blue-600 text-lg">✓</span>
+                  )}
+                </div>
+              </label>
+
+              {/* Express Delivery Option */}
+              <label
+                className={`block p-5 border-2 rounded-xl cursor-pointer transition-all ${
+                  deliveryType === "express"
+                    ? "border-orange-500 bg-orange-50 shadow-md ring-2 ring-orange-500/30"
+                    : "border-gray-200 hover:border-gray-300 hover:shadow-sm"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="deliveryType"
+                  value="express"
+                  checked={deliveryType === "express"}
+                  onChange={(e) => setDeliveryType(e.target.value)}
+                  className="sr-only"
+                />
+                <div className="flex items-start gap-3">
+                  <div className="flex-1">
+                    <p className="font-bold text-gray-900 flex items-center gap-2">
+                      <span className="text-xl">⚡</span> Express Delivery (2-3 days)
+                    </p>
+                    <p className="text-xs text-gray-600 mt-2">
+                      Shipped after 12 hours → Out for delivery in 1 day → Delivered in 1 hour
+                    </p>
+                    <p className="text-sm font-semibold text-orange-600 mt-2">+₹99</p>
+                  </div>
+                  {deliveryType === "express" && (
+                    <span className="text-orange-600 text-lg">✓</span>
+                  )}
+                </div>
+              </label>
             </div>
           </div>
 

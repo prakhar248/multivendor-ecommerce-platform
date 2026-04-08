@@ -29,6 +29,11 @@ const PAYMENT_METHOD_BADGE = {
   payu:     { label: "PayU",     icon: "P", color: "bg-green-50 text-green-700 border-green-200" },
 };
 
+const DELIVERY_TYPE_BADGE = {
+  normal:  { label: "Normal Delivery (5-6 days)", icon: "🚚", color: "bg-blue-50 text-blue-700 border-blue-200" },
+  express: { label: "Express Delivery (2-3 days)", icon: "⚡", color: "bg-orange-50 text-orange-700 border-orange-200" },
+};
+
 const TRACKING_STEPS = [
   { key: "processing",       label: "Processing",       icon: "1" },
   { key: "shipped",          label: "Shipped",           icon: "2" },
@@ -43,10 +48,26 @@ const FILTER_OPTIONS = [
   { value: "failed",  label: "Failed" },
 ];
 
-// ── Order Tracking Visual ─────────────────────────────────────
-const OrderTracking = ({ status }) => {
-  const currentIndex = TRACKING_STEPS.findIndex((s) => s.key === status);
+// ── Order Tracking Visual with Delivery Dates ────────────────
+const OrderTracking = ({ order }) => {
+  const currentIndex = TRACKING_STEPS.findIndex((s) => s.key === order.status);
   const stepIndex = currentIndex >= 0 ? currentIndex : 0;
+
+  // Map status keys to delivery date fields
+  const getExpectedDate = (statusKey) => {
+    if (statusKey === "processing") return order.createdAt;
+    if (statusKey === "shipped") return order.expectedShippedAt;
+    if (statusKey === "out_for_delivery") return order.expectedOutForDeliveryAt;
+    if (statusKey === "delivered") return order.expectedDeliveredAt;
+    return null;
+  };
+
+  const formatDate = (date) => {
+    if (!date) return "";
+    return new Date(date).toLocaleDateString("en-IN", {
+      day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
+    });
+  };
 
   return (
     <div className="mb-4 p-4 bg-gray-50 rounded-lg">
@@ -55,6 +76,7 @@ const OrderTracking = ({ status }) => {
         {TRACKING_STEPS.map((step, index) => {
           const isCompleted = index <= stepIndex;
           const isCurrent = index === stepIndex;
+          const expectedDate = getExpectedDate(step.key);
 
           return (
             <div key={step.key} className="flex flex-col items-center flex-1">
@@ -71,6 +93,11 @@ const OrderTracking = ({ status }) => {
               `}>
                 {step.label}
               </p>
+              {expectedDate && (
+                <p className={`text-xs text-center mt-1 ${isCompleted ? "text-gray-600" : "text-gray-400"}`}>
+                  {formatDate(expectedDate)}
+                </p>
+              )}
               {index < TRACKING_STEPS.length - 1 && (
                 <div className={`
                   h-1 flex-1 mx-0.5 mt-2 rounded
@@ -349,6 +376,31 @@ const Orders = () => {
                   </div>
                 )}
 
+                {/* Delivery Information */}
+                {order.paymentStatus === "paid" && (
+                  <div className="bg-purple-50 rounded-lg p-3 mb-4 text-sm border border-purple-100">
+                    <div className="flex flex-wrap gap-4 text-purple-800">
+                      {/* Delivery Type Badge */}
+                      {order.deliveryType && DELIVERY_TYPE_BADGE[order.deliveryType] && (
+                        <span className="flex items-center gap-1">
+                          <strong>{DELIVERY_TYPE_BADGE[order.deliveryType].icon}</strong>
+                          {DELIVERY_TYPE_BADGE[order.deliveryType].label}
+                        </span>
+                      )}
+                      
+                      {/* Expected Shipped Date */}
+                      {order.expectedShippedAt && (
+                        <span className="text-xs">
+                          <strong>📦 Arriving by:</strong>{" "}
+                          {new Date(order.expectedDeliveredAt).toLocaleDateString("en-IN", {
+                            day: "numeric", month: "short", year: "numeric",
+                          })}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Retry Payment (for failed/pending orders) */}
                 {canRetry && (
                   <div className="bg-red-50 rounded-lg p-4 mb-4 border border-red-100">
@@ -395,7 +447,7 @@ const Orders = () => {
 
                 {/* Order tracking */}
                 {order.status !== "cancelled" && order.paymentStatus === "paid" && (
-                  <OrderTracking status={order.status} />
+                  <OrderTracking order={order} />
                 )}
 
                 {/* Order items */}

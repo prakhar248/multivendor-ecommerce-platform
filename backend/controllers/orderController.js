@@ -6,10 +6,11 @@ const Cart    = require("../models/Cart");
 const Product = require("../models/Product");
 const sendEmail = require("../utils/sendEmail");
 const emailTemplate = require("../utils/emailTemplate");
+const { calculateDeliveryDates } = require("../utils/deliveryUtils");
 
 exports.placeOrder = async (req, res, next) => {
   try {
-    const { shippingAddress, orderItems: directItems } = req.body;
+    const { shippingAddress, orderItems: directItems, deliveryType = "normal" } = req.body;
 
     let items = [];
     let cart = null;
@@ -50,7 +51,17 @@ exports.placeOrder = async (req, res, next) => {
 
     // ── CALCULATE PRICES ─────────────────────────────────────────────
     const itemsPrice    = items.reduce((acc, i) => acc + i.price * i.quantity, 0);
-    const shippingPrice = itemsPrice > 500 ? 0 : 50;
+    
+    // ── CALCULATE DELIVERY CHARGE ───────────────────────────────────
+    // Order >= ₹500: Free delivery (standard), ₹150 for express
+    // Order < ₹500: ₹100 delivery (standard), ₹250 for express (₹100 + ₹150)
+    let shippingPrice;
+    if (itemsPrice >= 500) {
+      shippingPrice = deliveryType === "express" ? 150 : 0;
+    } else {
+      shippingPrice = deliveryType === "express" ? 250 : 100;
+    }
+    
     const taxPrice      = Math.round(itemsPrice * 0.18);
     const totalPrice    = itemsPrice + shippingPrice + taxPrice;
 
@@ -64,6 +75,7 @@ exports.placeOrder = async (req, res, next) => {
       taxPrice,
       totalPrice,
       paymentStatus: "pending",
+      deliveryType: deliveryType || "normal", // NEW: Save customer's delivery preference
     });
 
     console.log("✅ Order created:", order._id);

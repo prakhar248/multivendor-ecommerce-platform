@@ -49,12 +49,27 @@ const orderSchema = new mongoose.Schema(
     payuStatus:    String, // success, failure, pending
     
     paidAt:        Date,
+    
+    // ── Delivery Type & Tracking ────────────────────────────
+    deliveryType: {
+      type:    String,
+      enum:    ["normal", "express"],
+      default: "normal",
+    },
+    // Estimated delivery dates (calculated from paidAt)
+    expectedShippedAt:      Date, // When order will be shipped
+    expectedOutForDeliveryAt: Date, // When order will be out for delivery
+    expectedDeliveredAt:    Date, // When order will be delivered
+    // Actual delivery timestamps
+    shippedAt:              Date,
+    outForDeliveryAt:       Date,
+    deliveredAt:            Date,
+    
     status: {
       type:    String,
       enum:    ["processing", "shipped", "out_for_delivery", "delivered", "cancelled"],
       default: "processing",
     },
-    deliveredAt: Date,
   },
   { timestamps: true }
 );
