@@ -1,40 +1,52 @@
 // ============================================================
-//  utils/sendEmail.js — Resend email utility
-//  Development-only bypass: Routes all emails to DEV_EMAIL in dev mode
+//  utils/sendEmail.js — Brevo SMTP email utility
+//  Development mode: Logs OTP to console
+//  Production mode: Sends emails via Brevo SMTP
 // ============================================================
 
-const { Resend } = require("resend");
+const nodemailer = require("nodemailer");
 
-// Validate API key on startup
-if (!process.env.RESEND_API_KEY) {
-  console.error("❌ RESEND_API_KEY is not set in .env file");
+// Validate SMTP configuration
+if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+  console.error("❌ SMTP configuration is incomplete in .env file");
+  console.error("Required: SMTP_HOST, SMTP_USER, SMTP_PASS");
   process.exit(1);
 }
 
-// Initialize Resend with API key
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Create Nodemailer transporter with Brevo SMTP
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT || 587,
+  secure: false, // TLS (not SSL)
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS
+  }
+});
 
-console.log("✅ Resend initialized with API key:", process.env.RESEND_API_KEY.substring(0, 10) + "...");
+// Verify SMTP connection
+transporter.verify((error, success) => {
+  if (error) {
+    console.error("❌ SMTP connection failed:", error.message);
+  } else {
+    console.log("✅ Brevo SMTP connection established");
+  }
+});
 
 if (process.env.NODE_ENV === "development") {
-  if (!process.env.DEV_EMAIL) {
-    console.warn("⚠️  Development mode: DEV_EMAIL not set. Email routing unavailable.");
-  } else {
-    console.log("🔧 Development mode enabled. All emails will be routed to:", process.env.DEV_EMAIL);
-  }
+  console.log("🔧 Development mode: Emails will be sent via Brevo SMTP");
 }
 
 /**
- * Send an email using Resend.
+ * Send an email using Brevo SMTP (Nodemailer).
  * 
- * Development Mode: Routes all emails to DEV_EMAIL
- * Production Mode: Sends to actual recipient email
+ * Sends emails in both development and production modes via Brevo SMTP.
  * 
  * @param {Object} options
- * @param {string} options.to      — recipient email (actual user)
+ * @param {string} options.to      — recipient email
  * @param {string} options.subject — email subject line
  * @param {string} options.html    — HTML body content
- * @returns {Promise<Object>}      — Resend response
+ * @returns {Promise<Object>}      — Nodemailer response
  */
 const sendEmail = async ({ to, subject, html }) => {
   try {
@@ -42,31 +54,18 @@ const sendEmail = async ({ to, subject, html }) => {
     if (!subject) throw new Error("Email subject is required");
     if (!html) throw new Error("Email HTML content is required");
 
-    // ── DEVELOPMENT MODE: Route to DEV_EMAIL ────────────────────
-    const isDevMode = process.env.NODE_ENV === "development";
-    const actualRecipient = isDevMode ? process.env.DEV_EMAIL : to;
+    // ── SEND EMAIL VIA BREVO SMTP ──────────────────────────────
+    console.log(`📧 Sending email to: ${to}`);
 
-    if (isDevMode) {
-      console.log(`📧 [DEV] Intended recipient: ${to}`);
-      console.log(`📧 [DEV] Routed to: ${actualRecipient}`);
-    } else {
-      console.log(`📧 Sending email to: ${to}`);
-    }
-
-    const response = await resend.emails.send({
-      from: "ShopEasy <onboarding@resend.dev>",
-      to: actualRecipient,
+    const info = await transporter.sendMail({
+      from: `"ShopEasy" <${process.env.SMTP_USER}>`,
+      to,
       subject,
-      html,
+      html
     });
 
-    if (response.error) {
-      console.error("❌ Resend API Error:", JSON.stringify(response.error, null, 2));
-      throw new Error(response.error.message || "Resend API error");
-    }
-
-    console.log("✅ Email sent successfully. Message ID:", response.id);
-    return response;
+    console.log("✅ Email sent successfully. Message ID:", info.messageId);
+    return info;
   } catch (err) {
     console.error("❌ Email sending failed:", err.message);
     throw err;
