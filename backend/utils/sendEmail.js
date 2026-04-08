@@ -67,7 +67,7 @@ const sendEmail = async ({ to, subject, html }) => {
     console.log("   Subject:", subject);
 
     const info = await transporter.sendMail({
-      from: `"ShopEasy" <${process.env.SMTP_USER}>`,
+      from: `"ShopEasy" <${prakharchouhan.dev@gmail.com}>`,
       to,
       subject,
       html
