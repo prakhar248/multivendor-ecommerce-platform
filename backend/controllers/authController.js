@@ -308,13 +308,13 @@ exports.verifyOtp = async (req, res, next) => {
 // ============================================================
 exports.resendOtp = async (req, res, next) => {
   try {
-    const { email } = req.body;
+    const { email, purpose = "email-verification" } = req.body;
 
     if (!email) {
       return res.status(400).json({ success: false, message: "Email is required." });
     }
 
-    console.log("Resending OTP to:", email);
+    console.log("Sending OTP to:", email, "for:", purpose);
 
     let targetUser = await User.findOne({ email }).select("+otpHash +otpExpires");
     let isTemp = false;
@@ -328,7 +328,9 @@ exports.resendOtp = async (req, res, next) => {
       return res.status(404).json({ success: false, message: "User not found." });
     }
 
-    if (!isTemp && targetUser.isEmailVerified) {
+    // Only check email verification for email-verification purpose
+    // Allow OTP sending to verified users for password-change purpose
+    if (purpose === "email-verification" && !isTemp && targetUser.isEmailVerified) {
       return res.status(400).json({ success: false, message: "Email is already verified." });
     }
 
@@ -343,12 +345,25 @@ exports.resendOtp = async (req, res, next) => {
       console.log(`📩 OTP for ${targetUser.email}: ${otp}`);
     }
 
-    const html = emailTemplate({
-      title: "Verify Your Account",
-      greeting: `Hi ${targetUser.name},`,
-      body: `
+    // Customize email based on purpose
+    let emailTitle, emailBody;
+    if (purpose === "password-change") {
+      emailTitle = "Change Your Password";
+      emailBody = `
+        <p>We received a request to change your password on <strong>ShopEasy</strong>.</p>
+        <p>Here is your verification code:</p>
+      `;
+    } else {
+      emailTitle = "Verify Your Account";
+      emailBody = `
         <p>Here is your new verification code for <strong>ShopEasy</strong>:</p>
-      `,
+      `;
+    }
+
+    const html = emailTemplate({
+      title: emailTitle,
+      greeting: `Hi ${targetUser.name},`,
+      body: emailBody,
       otp,
       footer: "If you didn't request this code, you can safely ignore this email.",
     });
@@ -356,7 +371,7 @@ exports.resendOtp = async (req, res, next) => {
     try {
       await sendEmail({
         to: targetUser.email,
-        subject: "Verify your email - ShopEasy",
+        subject: purpose === "password-change" ? "Change Your Password - ShopEasy" : "Verify your email - ShopEasy",
         html,
       });
       console.log("Email sent successfully");

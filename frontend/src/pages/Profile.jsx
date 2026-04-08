@@ -82,7 +82,10 @@ const Profile = () => {
   const handleInitiatePasswordChange = async () => {
     try {
       setChangePasswordLoading(true);
-      const { data } = await api.post("/auth/send-otp", { email: user.email });
+      const { data } = await api.post("/auth/send-otp", { 
+        email: user.email,
+        purpose: "password-change"
+      });
       toast.success(data.message || "OTP sent to your email");
       setChangePasswordStep("verify-otp");
       setShowChangePasswordModal(true);
