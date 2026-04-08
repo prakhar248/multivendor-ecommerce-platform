@@ -38,7 +38,7 @@ mern-ecommerce/
 │   │   ├── orderRoutes.js         → /api/orders/*
 │   │   └── paymentRoutes.js       → /api/payment/*
 │   ├── utils/
-│   │   └── sendEmail.js           → Nodemailer + HTML templates
+│   │   └── sendEmail.js           → Resend + HTML templates
 │   ├── server.js                  → Express app entry point
 │   └── .env.example
 └── frontend/

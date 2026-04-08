@@ -1,6 +1,6 @@
 // ============================================================
 //  controllers/authController.js  —  OTP-based verification
-//  Uses Nodemailer for email, SHA-256 hashed OTPs with expiry.
+//  Uses Resend for email, SHA-256 hashed OTPs with expiry.
 // ============================================================
 
 const User     = require("../models/User");

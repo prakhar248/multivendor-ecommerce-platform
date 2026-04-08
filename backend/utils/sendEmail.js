@@ -1,46 +1,32 @@
 // ============================================================
-//  utils/sendEmail.js — Nodemailer email utility
-//  Uses Gmail SMTP for transactional emails.
+//  utils/sendEmail.js — Resend email utility
+//  Uses Resend for transactional emails.
 // ============================================================
 
-const nodemailer = require("nodemailer");
+const { Resend } = require("resend");
 
-// Create reusable transporter using Gmail SMTP
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-
-transporter.verify((error, success) => {
-  if (error) {
-    console.error("SMTP ERROR:", error);
-  } else {
-    console.log("SMTP ready");
-  }
-});
+// Initialize Resend with API key
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 /**
- * Send an email using Nodemailer.
+ * Send an email using Resend.
  * @param {Object} options
  * @param {string} options.to      — recipient email
  * @param {string} options.subject — email subject line
  * @param {string} options.html    — HTML body content
- * @returns {Promise<Object>}      — Nodemailer response
+ * @returns {Promise<Object>}      — Resend response
  */
 const sendEmail = async ({ to, subject, html }) => {
   try {
-    const info = await transporter.sendMail({
-      from: `"ShopEasy" <${process.env.EMAIL_USER}>`,
+    const response = await resend.emails.send({
+      from: "ShopEasy <onboarding@resend.dev>",
       to,
       subject,
       html,
     });
 
-    console.log("Email sent successfully:", info.messageId);
-    return info;
+    console.log("Email sent successfully:", response.id);
+    return response;
   } catch (err) {
     console.error("Email sending failed:", err);
     throw err;
