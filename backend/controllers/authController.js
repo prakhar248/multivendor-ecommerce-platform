@@ -230,16 +230,17 @@ exports.resendOtp = async (req, res, next) => {
       });
       console.log("Email sent successfully");
     } catch (error) {
-      console.error("Email sending failed:", error);
+      console.error("EMAIL ERROR:", error);
       return res.status(500).json({
         success: false,
         message: "Failed to send OTP email",
+        error: error.message
       });
     }
 
     res.status(200).json({
       success: true,
-      message: "A new OTP has been sent to your email.",
+      message: "OTP sent"
     });
   } catch (error) {
     next(error);
