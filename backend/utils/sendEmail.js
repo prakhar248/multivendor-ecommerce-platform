@@ -1,7 +1,6 @@
 // ============================================================
 //  utils/sendEmail.js — Brevo SMTP email utility
-//  Development mode: Logs OTP to console
-//  Production mode: Sends emails via Brevo SMTP
+//  Sends emails via Brevo SMTP with detailed error logging
 // ============================================================
 
 const nodemailer = require("nodemailer");
@@ -10,8 +9,17 @@ const nodemailer = require("nodemailer");
 if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
   console.error("❌ SMTP configuration is incomplete in .env file");
   console.error("Required: SMTP_HOST, SMTP_USER, SMTP_PASS");
+  console.error("SMTP_HOST:", process.env.SMTP_HOST);
+  console.error("SMTP_USER:", process.env.SMTP_USER);
+  console.error("SMTP_PASS:", process.env.SMTP_PASS ? "***" : "NOT SET");
   process.exit(1);
 }
+
+console.log("📧 Brevo SMTP Configuration:");
+console.log("   Host:", process.env.SMTP_HOST);
+console.log("   Port:", process.env.SMTP_PORT || 587);
+console.log("   User:", process.env.SMTP_USER);
+console.log("   Pass: ***HIDDEN***");
 
 // Create Nodemailer transporter with Brevo SMTP
 const transporter = nodemailer.createTransport({
@@ -21,26 +29,26 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS
-  }
+  },
+  logger: true, // Enable debug logging
+  debug: true   // Enable debug output
 });
 
-// Verify SMTP connection
-transporter.verify((error, success) => {
-  if (error) {
-    console.error("❌ SMTP connection failed:", error.message);
-  } else {
-    console.log("✅ Brevo SMTP connection established");
-  }
-});
-
-if (process.env.NODE_ENV === "development") {
-  console.log("🔧 Development mode: Emails will be sent via Brevo SMTP");
-}
+// Verify SMTP connection on startup
+console.log("🔍 Testing SMTP connection...");
+transporter.verify()
+  .then(() => {
+    console.log("✅ Brevo SMTP connection successful!");
+  })
+  .catch((error) => {
+    console.error("❌ SMTP connection test failed:");
+    console.error("   Error:", error.message);
+    console.error("   Code:", error.code);
+    console.error("   Hostname:", error.hostname);
+  });
 
 /**
  * Send an email using Brevo SMTP (Nodemailer).
- * 
- * Sends emails in both development and production modes via Brevo SMTP.
  * 
  * @param {Object} options
  * @param {string} options.to      — recipient email
@@ -54,8 +62,9 @@ const sendEmail = async ({ to, subject, html }) => {
     if (!subject) throw new Error("Email subject is required");
     if (!html) throw new Error("Email HTML content is required");
 
-    // ── SEND EMAIL VIA BREVO SMTP ──────────────────────────────
-    console.log(`📧 Sending email to: ${to}`);
+    console.log("\n📧 Attempting to send email...");
+    console.log("   To:", to);
+    console.log("   Subject:", subject);
 
     const info = await transporter.sendMail({
       from: `"ShopEasy" <${process.env.SMTP_USER}>`,
@@ -64,10 +73,15 @@ const sendEmail = async ({ to, subject, html }) => {
       html
     });
 
-    console.log("✅ Email sent successfully. Message ID:", info.messageId);
+    console.log("✅ Email sent successfully!");
+    console.log("   Message ID:", info.messageId);
+    console.log("   Response:", info.response);
     return info;
   } catch (err) {
-    console.error("❌ Email sending failed:", err.message);
+    console.error("\n❌ Email sending failed!");
+    console.error("   Error Message:", err.message);
+    console.error("   Error Code:", err.code);
+    console.error("   Error Details:", err);
     throw err;
   }
 };
