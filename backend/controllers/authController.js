@@ -104,7 +104,7 @@ exports.signup = async (req, res, next) => {
       await TempUser.findByIdAndDelete(tempUser._id);
       return res.status(500).json({
         success: false,
-        message: "Failed to send OTP email",
+        message: "Signup failed: Unable to send OTP",
         error: error.message
       });
     }
@@ -259,6 +259,8 @@ exports.resendOtp = async (req, res, next) => {
       return res.status(400).json({ success: false, message: "Email is required." });
     }
 
+    console.log("Resending OTP to:", email);
+
     let targetUser = await User.findOne({ email }).select("+otpHash +otpExpires");
     let isTemp = false;
 
@@ -296,7 +298,6 @@ exports.resendOtp = async (req, res, next) => {
       footer: "If you didn't request this code, you can safely ignore this email.",
     });
 
-    console.log("Sending OTP to:", targetUser.email);
     try {
       await sendEmail({
         to: targetUser.email,
