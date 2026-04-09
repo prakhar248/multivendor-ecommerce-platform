@@ -817,7 +817,7 @@ const Checkout = () => {
                   ℹ️ You'll be redirected to PayU's secure checkout page.
                 </p>
               </>
-            )}
+)}
           </div>
         </div>
       )}

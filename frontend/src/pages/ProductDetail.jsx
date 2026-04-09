@@ -41,7 +41,7 @@ const StarRating = ({ rating, onRate, size = "text-xl", editable = false }) => {
           </button>
         );
       })}
-      </motion.div>
+    </div>
   );
 };
 
@@ -393,7 +393,7 @@ const ProductDetail = () => {
         </div>
 
 
-      </div>
+      </motion.div>
 
       {/* ════════════════════════════════════════════════════════════
           REVIEWS SECTION

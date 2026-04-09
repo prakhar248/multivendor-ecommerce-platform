@@ -64,6 +64,7 @@ const ProductCard = ({ product, index = 0 }) => {
         ) : (
           <span className="text-xs text-red-600 font-semibold">Out of Stock</span>
         )}
+      </div>
       </motion.div>
     </Link>
   );
