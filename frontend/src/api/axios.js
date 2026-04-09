@@ -5,10 +5,18 @@
 
 import axios from "axios";
 
+const API = import.meta.env.VITE_API_URL;
+
+if (!API) {
+  throw new Error("VITE_API_URL is not defined. Check Vercel environment variables.");
+}
+
+// Debug log — verify correct base URL in production
+console.log("API BASE URL:", API);
+
 const api = axios.create({
-  // In development: relative URL goes through Vite proxy (see vite.config.js)
-  // In production: VITE_API_URL should be set to the deployed backend URL
-  baseURL: import.meta.env.VITE_API_URL || "/api",
+  baseURL: API,
+  withCredentials: true,
   headers: { "Content-Type": "application/json" },
 });
 
