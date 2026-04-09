@@ -15,7 +15,7 @@ if (!API) {
 console.log("API BASE URL:", API);
 
 const api = axios.create({
-  baseURL: API,
+  baseURL: `${API}/api`,
   withCredentials: true,
   headers: { "Content-Type": "application/json" },
 });
