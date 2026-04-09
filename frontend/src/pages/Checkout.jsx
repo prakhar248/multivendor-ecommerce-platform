@@ -60,11 +60,11 @@ const Checkout = () => {
   }, 0);
 
   // Calculate shipping price based on order amount and delivery type
-  // Order >= ₹500: Free delivery (standard), ₹150 for express
-  // Order < ₹500: ₹100 delivery (standard), ₹250 for express
+  // Order >= ₹500: Free delivery (standard), ₹99 for express
+  // Order < ₹500: ₹100 delivery (standard), ₹199 for express
   const shipping = itemsPrice >= 500
-    ? (deliveryType === "express" ? 150 : 0)
-    : (deliveryType === "express" ? 250 : 100);
+    ? (deliveryType === "express" ? 99 : 0)
+    : (deliveryType === "express" ? 199 : 100);
 
   const tax        = Math.round(itemsPrice * 0.18);
   const grandTotal = itemsPrice + shipping + tax;

@@ -17,7 +17,7 @@ const StarRating = ({ rating, onRate, size = "text-xl", editable = false }) => {
   const [hoverRating, setHoverRating] = useState(0);
 
   return (
-    <div className="flex items-center gap-0.5">
+    <div className="flex items-center justify-center gap-0.5">
       {[1, 2, 3, 4, 5].map((star) => {
         const filled = editable
           ? star <= (hoverRating || rating)
@@ -261,9 +261,9 @@ const ProductDetail = () => {
   const totalReviews = product.numReviews || 0;
 
   return (
-    <div className="max-w-full mx-auto px-4 py-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       {/* ── PRODUCT LAYOUT ─────────────────────────────── */}
-      <div className="grid grid-cols-12 gap-6">
+      <div className="grid grid-cols-12 gap-8">
 
         {/* COL 1: THUMBNAILS */}
         <div className="col-span-1 flex flex-col gap-2">
@@ -288,7 +288,7 @@ const ProductDetail = () => {
 
         {/* COL 2: MAIN IMAGE */}
         <div
-          className="col-span-3 relative bg-gray-50 rounded-lg overflow-hidden cursor-crosshair"
+          className="col-span-4 relative bg-gray-50 rounded-lg overflow-hidden cursor-crosshair"
           onMouseMove={handleMouseMove}
           onMouseEnter={(e) => {
             setShowZoom(true);
@@ -311,7 +311,7 @@ const ProductDetail = () => {
         </div>
 
         {/* COL 3: PRODUCT INFO + ZOOM OVERLAY */}
-        <div className="col-span-4 relative h-fit">
+        <div className="col-span-7 relative h-fit">
           <div className={`transition-opacity duration-150 ${showZoom ? "opacity-0" : "opacity-100"}`}>
             <span className="text-sm font-medium text-orange-600">{product.category}</span>
 
@@ -417,14 +417,13 @@ const ProductDetail = () => {
           )}
         </div>
 
-        {/* COL 4: Extra space (keeps 12-col grid balanced) */}
-        <div className="col-span-4" />
+
       </div>
 
       {/* ════════════════════════════════════════════════════════════
           REVIEWS SECTION
           ════════════════════════════════════════════════════════════ */}
-      <div id="reviews-section" className="mt-12 max-w-5xl mx-auto scroll-mt-20">
+      <div id="reviews-section" className="mt-12 scroll-mt-20">
         <h2 className="text-2xl font-bold text-gray-800 mb-6">Customer Reviews</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

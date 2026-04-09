@@ -53,13 +53,13 @@ exports.placeOrder = async (req, res, next) => {
     const itemsPrice    = items.reduce((acc, i) => acc + i.price * i.quantity, 0);
     
     // ── CALCULATE DELIVERY CHARGE ───────────────────────────────────
-    // Order >= ₹500: Free delivery (standard), ₹150 for express
-    // Order < ₹500: ₹100 delivery (standard), ₹250 for express (₹100 + ₹150)
+    // Order >= ₹500: Free delivery (standard), ₹99 for express
+    // Order < ₹500: ₹100 delivery (standard), ₹199 for express (₹100 + ₹99)
     let shippingPrice;
     if (itemsPrice >= 500) {
-      shippingPrice = deliveryType === "express" ? 150 : 0;
+      shippingPrice = deliveryType === "express" ? 99 : 0;
     } else {
-      shippingPrice = deliveryType === "express" ? 250 : 100;
+      shippingPrice = deliveryType === "express" ? 199 : 100;
     }
     
     const taxPrice      = Math.round(itemsPrice * 0.18);
