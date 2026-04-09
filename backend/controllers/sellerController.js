@@ -182,11 +182,35 @@ exports.updateProduct = async (req, res, next) => {
 
     const updateData = { ...req.body };
 
-    // If new images are uploaded, append them to existing ones
+    // Handle image removal
+    let images = [...product.images];
+    if (req.body.removedImages) {
+      try {
+        const removedUrls = JSON.parse(req.body.removedImages);
+        if (Array.isArray(removedUrls)) {
+          // Delete removed images from Cloudinary and filter them out
+          for (const removedUrl of removedUrls) {
+            const imageToRemove = product.images.find((img) => img.url === removedUrl);
+            if (imageToRemove && imageToRemove.publicId) {
+              await cloudinary.uploader.destroy(imageToRemove.publicId);
+            }
+          }
+          // Keep only images that were not removed
+          images = product.images.filter((img) => !removedUrls.includes(img.url));
+        }
+      } catch (parseError) {
+        console.error("Error parsing removedImages:", parseError);
+      }
+    }
+
+    // If new images are uploaded, append them to remaining ones
     if (req.files?.length > 0) {
       const newImages = req.files.map((file) => ({ url: file.path, publicId: file.filename }));
-      updateData.images = [...product.images, ...newImages];
+      images = [...images, ...newImages];
     }
+
+    updateData.images = images;
+    delete updateData.removedImages; // Don't save this to the database
 
     // Prevent seller from changing the seller field
     delete updateData.seller;

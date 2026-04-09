@@ -270,8 +270,14 @@ const ProductForm = () => {
             multiple
             onChange={onImageChange}
             className="block w-full text-sm text-gray-600 file:mr-4 file:rounded-lg file:border-0 file:bg-brand file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-brand/90"
+            disabled={imageItems.length >= MAX_IMAGES}
           />
-          <p className="mt-1 text-xs text-gray-400">PNG, JPG, WebP up to {MAX_IMAGES} images.</p>
+          {imageItems.length > 0 && (
+            <p className="mt-1 text-xs text-emerald-600 font-medium">✓ {imageItems.length} file(s) selected and ready to upload</p>
+          )}
+          {imageItems.length < MAX_IMAGES && (
+            <p className="mt-1 text-xs text-gray-400">PNG, JPG, WebP up to {MAX_IMAGES} images.</p>
+          )}
         </div>
 
         {imageItems.length > 0 && (
