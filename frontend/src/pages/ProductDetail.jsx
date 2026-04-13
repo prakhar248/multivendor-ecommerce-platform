@@ -392,8 +392,7 @@ const ProductDetail = () => {
           )}
         </div>
 
-
-      </motion.div>
+      </div>
 
       {/* ════════════════════════════════════════════════════════════
           REVIEWS SECTION
@@ -556,7 +555,7 @@ const ProductDetail = () => {
           tags={product.tags}
         />
       </div>
-    </div>
+    </motion.div>
   );
 };
 
